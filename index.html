@@ -1,0 +1,1427 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>FYS Labs Toolbox: Claude tools and Muse connectors</title>
+<meta name="description" content="The FYS Labs Toolbox: free and low-cost tools for getting more out of Claude, explained in plain words, plus the connectors Muse can connect to and what each one is good for." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  /* ==========================================================================
+     DESIGN-LOCK
+     Direction: a workshop manual for first-timers. Ink where you act,
+       cream where you read.
+     Tokens: cream #FAF8F5 page / ink #1B1D23 text and rules / blue #2237D3
+       links and focus / orange #E8893B only on ink (masthead rule, Copied,
+       hero period: it is 2.45:1 on cream, so never text there) / muted
+       #5D636F secondary text.
+     Type: Playfair Display 900 for the hero, 700 for section and entry
+       titles. Manrope for everything else. JetBrains Mono for commands only.
+     Layout: section titles hang in a narrow left column; reading column on
+       the right, under 70ch. Tools and connectors are ledger entries: an ink
+       rule on top, no box, no shadow.
+     The one bold element: the hero title. Nothing else competes.
+     Rules: dark slabs mean "paste this". Shapes carry state (underline =
+       current group or view, filled square = Start Here pick). Numbers only
+       for real steps.
+     ========================================================================== */
+  :root{
+    color-scheme: light dark;
+    --bg:#FAF8F5; --ink:#1B1D23; --text:#1B1D23; --muted:#5D636F;
+    --primary:#2237D3; --orange:#E8893B; --rule:#1B1D23; --hair:#DAD6CE;
+    --slab:#1B1D23; --slab-ink:#F5F2EC; --slab-edge:transparent;
+    --warn:#7A4A12; --mast:#1B1D23;
+    --measure:64ch;
+    --gutter:clamp(16px,4vw,40px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#14151A; --ink:#F2EFE9; --text:#E9E6E0; --muted:#A9AEB8;
+      --primary:#9DAEFF; --rule:#F2EFE9; --hair:#34363E;
+      --slab:#24262D; --slab-ink:#F5F2EC; --slab-edge:#3A3D46;
+      --warn:#F0C48A; --mast:#1B1D23;
+    }
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:"Manrope",system-ui,sans-serif;font-size:16px;line-height:1.6}
+  a{color:var(--primary);text-underline-offset:3px;text-decoration-thickness:1px}
+  a:hover{text-decoration-thickness:2px}
+  ::selection{background:var(--orange);color:#1B1D23}
+  :focus-visible{outline:3px solid var(--primary);outline-offset:3px}
+  h1,h2,h3,h4{color:var(--ink)}
+  code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.86em}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 var(--gutter) 96px}
+
+  /* Masthead: the FYS mark on the ink ground it was drawn for */
+  .masthead{background:var(--mast);border-bottom:3px solid var(--orange)}
+  .masthead-in{max-width:1240px;margin:0 auto;padding:12px var(--gutter);display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap}
+  .brand{display:inline-flex;align-items:center;gap:12px;min-height:44px;text-decoration:none;color:#F5F2EC}
+  .mast-logo{display:block;height:44px;width:auto}
+  .brand-name{font-family:"Playfair Display",Georgia,serif;font-weight:700;font-size:21px;line-height:1.15;letter-spacing:-.005em;padding-left:12px;border-left:1px solid rgba(245,242,236,.35)}
+  .mast-nav{display:flex;gap:4px 28px;flex-wrap:wrap}
+  .mast-nav a{color:#C9CCD4;text-decoration:none;font-size:14px;font-weight:700;min-height:44px;display:inline-flex;align-items:center}
+  .mast-nav a:hover{color:#fff;text-decoration:underline;text-underline-offset:6px}
+  .masthead :focus-visible{outline-color:var(--orange)}
+  #navMuse{display:none}
+  body.view-muse #navClaude{display:none}
+  body.view-muse #navMuse{display:flex}
+
+  /* View switch: two words, the current one underlined in ink */
+  .switch{border-bottom:1px solid var(--hair)}
+  .switch-in{max-width:1240px;margin:0 auto;padding:0 var(--gutter);display:flex;gap:40px}
+  .switch button{background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-1px;padding:14px 0 12px;font:inherit;color:var(--muted);text-align:left;cursor:pointer;min-height:44px}
+  .switch button b{display:block;font-size:19px;font-weight:800;line-height:1.2;color:inherit}
+  .switch button span{display:block;font-size:13.5px;font-weight:500;line-height:1.35}
+  .switch button:hover{color:var(--ink)}
+  .switch button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+
+  /* Hero: the one bold element */
+  .hero{padding:clamp(40px,7vw,88px) 0 clamp(40px,6vw,72px)}
+  .hero h1{font-family:"Playfair Display",Georgia,serif;font-weight:900;font-size:clamp(64px,13.6vw,196px);line-height:1.02;letter-spacing:-.035em;margin:0 0 clamp(28px,4vw,48px);padding-bottom:.04em;margin-left:-.04em}
+  .hero h1 .dot{color:var(--orange)}
+  .hero-copy{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,9fr);gap:20px 48px;align-items:start}
+  .lede{grid-column:2;grid-row:1;margin:0;font-size:clamp(18px,1.9vw,22px);line-height:1.5;max-width:58ch;color:var(--ink)}
+  .hero-note{grid-column:1;grid-row:1;margin:0;font-size:14px;line-height:1.55;color:var(--muted);padding-top:.4em}
+  .hero-note strong{color:var(--ink);font-weight:700}
+
+  /* Sections: title in the margin, reading column on the right */
+  .sect{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,9fr);gap:16px 48px;border-top:2px solid var(--rule);padding-top:24px;margin-top:72px}
+  .sect > h2{font-family:"Playfair Display",Georgia,serif;font-weight:700;font-size:clamp(28px,3vw,38px);line-height:1.15;letter-spacing:-.01em;margin:0}
+  .sect-body{max-width:var(--measure);min-width:0}
+  .sect-body > p{margin:0 0 16px;font-size:17px}
+  .sect-body > p:last-child{margin-bottom:0}
+  .sect h3{font-family:"Playfair Display",Georgia,serif;font-weight:700;font-size:25px;line-height:1.15;margin:44px 0 14px}
+  .sect > h2,.sect h3{text-wrap:balance}
+  #beginners,#tools,#before,#muse-who,#muse-tools{scroll-margin-top:16px}
+  .sect + .sect{margin-top:80px}
+
+  /* Chat versus Claude Code */
+  .vs{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+  .vs > div{border-top:1px solid var(--rule);padding-top:12px}
+  .vs h4{font-size:17px;font-weight:800;line-height:1.3;margin:0 0 6px}
+  .vs p{margin:0;font-size:16px}
+
+  /* Real sequences: setup steps and the 30-second method */
+  ol.seq{list-style:none;counter-reset:seq;margin:0;padding:0}
+  ol.seq > li{counter-increment:seq;position:relative;padding:16px 0 18px 56px;border-top:1px solid var(--hair);font-size:16.5px}
+  ol.seq > li::before{content:counter(seq);position:absolute;left:0;top:10px;font-family:"Playfair Display",Georgia,serif;font-weight:700;font-size:30px;line-height:1.15;color:var(--ink)}
+  ol.seq > li > strong:first-child{font-weight:800;color:var(--ink)}
+  .ok{display:block;margin-top:6px;font-size:15px;color:var(--muted)}
+  .ok strong{color:var(--ink);font-weight:700}
+  ol.seq .addbox{margin:12px 0 6px}
+  ol.seq .cmdnote{margin:10px 0 0}
+
+  /* Glossary */
+  .glossary{margin:0;display:grid;grid-template-columns:minmax(120px,max-content) minmax(0,1fr);gap:0 24px}
+  .glossary dt,.glossary dd{border-top:1px solid var(--hair);padding:12px 0;margin:0}
+  .glossary dt{font-weight:800;color:var(--ink)}
+  .glossary dd{color:var(--text);font-size:15.5px}
+
+  /* Start Here picks */
+  .starters{margin:8px 0 0}
+  .starter-row{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr);gap:4px 24px;border-top:1px solid var(--hair);padding:4px 0;align-items:baseline}
+  .starter-cat{font-size:14.5px;font-weight:700;color:var(--muted);padding-top:11px}
+  .starter-links{display:flex;flex-wrap:wrap;gap:0 22px}
+  .starter-links button{background:none;border:none;padding:0;font:inherit;font-size:16px;font-weight:700;color:var(--primary);cursor:pointer;min-height:44px;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px}
+  .starter-links button:hover{text-decoration-thickness:2px}
+
+  /* Toolbar: search, sort, the Start Here switch, group filters */
+  .controls{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:flex-end}
+  .search{flex:1 1 300px;display:flex;align-items:center;gap:10px;border-bottom:2px solid var(--rule);min-height:52px}
+  .search svg{flex:0 0 auto;color:var(--ink)}
+  .search input{flex:1;min-width:0;border:none;background:none;color:var(--ink);font:inherit;font-size:18px;padding:10px 0;outline:none}
+  .search input::placeholder{color:var(--muted);opacity:1}
+  .search:focus-within{outline:3px solid var(--primary);outline-offset:4px}
+  .sortwrap{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--rule);min-height:52px}
+  select.sort{appearance:none;-webkit-appearance:none;background:transparent;border:none;color:var(--ink);font:inherit;font-size:15px;font-weight:700;padding:12px 26px 12px 0;cursor:pointer;min-height:44px;
+    background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+    background-position:calc(100% - 9px) 52%,calc(100% - 4px) 52%;background-size:5px 5px;background-repeat:no-repeat}
+  select.sort option{color:#1B1D23;background:#FAF8F5}
+  button.toggle{display:inline-flex;align-items:center;gap:10px;background:none;border:none;color:var(--ink);font:inherit;font-size:15px;font-weight:700;padding:0 2px;min-height:52px;cursor:pointer}
+  button.toggle::before{content:"";flex:0 0 auto;width:16px;height:16px;border:2px solid var(--ink);background:transparent}
+  button.toggle[aria-pressed="true"]::before{background:var(--ink);box-shadow:inset 0 0 0 2px var(--bg)}
+  .chips{display:flex;flex-wrap:wrap;gap:0 24px;margin-top:20px}
+  .chip{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font:inherit;font-size:15px;font-weight:700;padding:10px 0 8px;min-height:44px;cursor:pointer}
+  .chip:hover{color:var(--ink)}
+  .chip[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+
+  /* Ledger entries (tools and connectors) */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:64px 44px;margin-top:48px}
+  .entry{border-top:2px solid var(--rule);padding-top:16px;display:flex;flex-direction:column;gap:14px;min-width:0;scroll-margin-top:24px}
+  .entry.flash{outline:3px solid var(--primary);outline-offset:10px}
+  .entry h3{font-family:"Playfair Display",Georgia,serif;font-weight:700;font-size:25px;line-height:1.15;letter-spacing:-.005em;margin:0;overflow-wrap:anywhere}
+  .entry h3 a{color:var(--ink);text-decoration:none;display:inline-block;padding:9px 0;margin:-9px 0}
+  .entry h3 a:hover{text-decoration:underline;text-decoration-thickness:2px}
+  .meta{margin:-6px 0 0;font-size:14px;line-height:1.45;color:var(--muted)}
+  .meta .grp{color:var(--ink);font-weight:700}
+  .pick{display:inline-flex;align-items:center;gap:7px;color:var(--ink);font-weight:700}
+  .pick::before{content:"";width:10px;height:10px;background:var(--ink)}
+  .pick.extra::before{background:transparent;border:2px solid var(--ink)}
+  .entry p{margin:0;font-size:15.5px}
+  .entry p > b{font-weight:800;color:var(--ink)}
+  .entry h4{margin:0 0 6px;font-size:15.5px;font-weight:800}
+  ol.steps{margin:0;padding-left:1.35em;display:grid;gap:6px;font-size:15.5px}
+  ol.steps li::marker{font-weight:800;color:var(--ink)}
+  .cmdlead{margin:0;font-size:15px;color:var(--text)}
+  .cmdnote{margin:0;font-size:14.5px;color:var(--muted)}
+  .addbox{background:var(--slab);border:1px solid var(--slab-edge);padding:6px 6px 6px 16px;display:flex;gap:12px;align-items:flex-start}
+  .addbox code{font-size:13.5px;color:var(--slab-ink);white-space:pre-wrap;overflow-wrap:break-word;flex:1;line-height:1.55;padding:6px 0;min-width:0}
+  .copybtn{flex:0 0 auto;min-width:76px;min-height:44px;background:transparent;border:1px solid rgba(245,242,236,.45);color:var(--slab-ink);font:inherit;font-size:13.5px;font-weight:700;padding:0 12px;cursor:pointer}
+  .copybtn:hover{border-color:var(--slab-ink)}
+  .copybtn.done{background:var(--orange);border-color:var(--orange);color:#1B1D23}
+  .addbox :focus-visible{outline-color:var(--orange);outline-offset:2px}
+  .caution{border-top:1px solid var(--hair);padding-top:12px;font-size:14.5px}
+  .caution p{margin:0;font-size:14.5px}
+  .caution b{color:var(--warn);font-weight:800}
+
+  /* Empty search result */
+  .empty{display:none;padding:56px 0 8px;max-width:var(--measure)}
+  .empty h2{font-family:"Playfair Display",Georgia,serif;font-weight:700;font-size:34px;line-height:1.15;margin:0 0 8px}
+  .empty p{margin:0 0 20px;font-size:17px}
+  .empty button{background:var(--ink);color:var(--bg);border:none;font:inherit;font-size:15px;font-weight:700;min-height:48px;padding:0 22px;cursor:pointer}
+
+  /* Who Muse is for */
+  .who-row{border-top:1px solid var(--hair);padding:16px 0 18px}
+  .who-row h3{font-family:"Manrope",system-ui,sans-serif;font-weight:800;margin:0 0 6px;font-size:18px;line-height:1.3}
+  .who-row p{margin:0;font-size:16.5px}
+  .who-row p strong{font-weight:700;color:var(--ink)}
+
+  /* Notes at the end of each view */
+  ul.notes{list-style:none;margin:0;padding:0}
+  ul.notes li{border-top:1px solid var(--hair);padding:14px 0 16px;font-size:16px}
+  ul.notes li strong{color:var(--ink);font-weight:800}
+
+  @media (max-width:900px){
+    .sect,.hero-copy{grid-template-columns:1fr}
+    .lede,.hero-note{grid-column:1;grid-row:auto}
+    .hero-note{max-width:var(--measure)}
+    .sect{margin-top:56px}
+    .sect + .sect{margin-top:64px}
+  }
+  @media (max-width:600px){
+    body{font-size:16px}
+    .mast-logo{height:38px}
+    .brand-name{font-size:18px;padding-left:10px}
+    .masthead-in{padding-top:10px;padding-bottom:4px}
+    .mast-nav{gap:0 20px}
+    .mast-nav a{font-size:13.5px}
+    .switch-in{gap:28px}
+    .switch button b{font-size:18px}
+    .vs{grid-template-columns:1fr;gap:20px}
+    .glossary{grid-template-columns:1fr}
+    .glossary dd{border-top:none;padding-top:0}
+    .starter-row{grid-template-columns:1fr;gap:0}
+    .starter-cat{padding-top:10px}
+    ol.seq > li{padding-left:44px}
+    ol.seq > li::before{font-size:26px}
+    .chips{gap:0 18px}
+    .grid{gap:52px}
+    .entry h3{font-size:23px}
+    .addbox{padding-left:12px;gap:8px}
+    .addbox code{font-size:12.5px}
+  }
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+</style>
+</head>
+<body id="top">
+<header class="masthead">
+  <div class="masthead-in">
+    <a class="brand" href="#top" aria-label="FYS Labs Toolbox, back to top">
+    <img class="mast-logo" src="data:image/png;base64,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" width="560" height="458" alt="" />
+      <span class="brand-name" aria-hidden="true">Labs Toolbox</span>
+    </a>
+    <nav class="mast-nav" id="navClaude" aria-label="On this page">
+      <a href="#beginners">New to Claude?</a>
+      <a href="#tools">The tools</a>
+      <a href="#before">Before you install</a>
+    </nav>
+    <nav class="mast-nav" id="navMuse" aria-label="On this page">
+      <a href="#muse-who">Who Muse is for</a>
+      <a href="#muse-tools">The connectors</a>
+    </nav>
+  </div>
+</header>
+<div class="switch">
+  <div class="switch-in" role="group" aria-label="Choose a side of the toolbox">
+    <button type="button" id="tabClaude" aria-pressed="true"><b>Claude</b><span>Tools for building</span></button>
+    <button type="button" id="tabMuse" aria-pressed="false"><b>Muse</b><span>The assistant and its connectors</span></button>
+  </div>
+</div>
+<div class="wrap">
+
+  <div id="viewClaude">
+  <header class="hero">
+    <h1>Meet<br />Claude<span class="dot" aria-hidden="true">.</span></h1>
+    <div class="hero-copy">
+      <p class="lede">A short list of the best free and low-cost tools for getting more out of Claude, building websites, making videos, and organising your work. Every tool is explained in plain words, for people who have never written code.</p>
+      <p class="hero-note">Prices and details were checked in <strong>October 2026</strong> and can change. Check a tool's own page before you build client work on it. <strong>None of these tools are ours.</strong></p>
+    </div>
+  </header>
+
+  <section class="sect" id="beginners" aria-labelledby="h-beginners">
+    <h2 id="h-beginners">New to Claude? Start here.</h2>
+    <div class="sect-body">
+      <p><strong>Why Claude?</strong> Claude is an AI helper you talk to in plain words. Instead of facing a blank page, you describe the job, like a letter, a plan, or a page for your website. Claude drafts it, explains its thinking in normal language, and works through it with you. It is patient with beginners, strong at writing, and careful about following instructions. You do not need to know any code to get real work out of it.</p>
+
+      <h3>Claude or Claude Code? They are not the same thing.</h3>
+      <div class="vs">
+        <div>
+          <h4>Claude, the chat</h4>
+          <p>The one at <strong>claude.ai</strong>, in your browser or the phone app. You type, it answers: writing, summaries, ideas, explanations. It cannot touch the files on your computer. This is where everyone should start.</p>
+        </div>
+        <div>
+          <h4>Claude Code</h4>
+          <p>The same helper, working <strong>on your computer</strong>. It can create and edit real files, build web pages and videos, and run the tools on this page. When a card below says &ldquo;open Claude Code,&rdquo; this is the one it means.</p>
+        </div>
+      </div>
+
+      <h3>Set up, step by step</h3>
+      <ol class="seq">
+        <li><strong>Make a free account.</strong> Go to claude.ai and sign up with your email.
+          <span class="ok"><strong>It worked if</strong> you are signed in and see an empty chat box.</span></li>
+        <li><strong>Try the chat first.</strong> Ask for something small and real: &ldquo;Turn these rough notes into a tidy email.&rdquo; Keep going until it feels normal.
+          <span class="ok"><strong>It worked if</strong> Claude answers in the chat window. That is regular Claude. Nothing is installed, so nothing can break.</span></li>
+        <li><strong>Decide whether you need Claude Code.</strong> If you only want writing and answers, the chat is enough and you can stop here. If you want pages, files, or videos made for you, which is what the tools below are for, keep going.
+          <span class="ok"><strong>It worked if</strong> you know which of the two you are setting up, and why.</span></li>
+        <li><strong>Check your plan covers Claude Code.</strong> Claude Code needs a paid Claude plan (Pro or Max), or a developer account with Anthropic, the company that makes Claude. The free chat plan does not include it.
+          <span class="ok"><strong>It worked if</strong> your account settings on claude.ai show a Pro or Max plan.</span></li>
+        <li><strong>Install Claude Code.</strong> Open the terminal, the text window on your computer where you type commands. On a Mac it is the app called Terminal; on Windows it is PowerShell. Paste the command for your computer, press Enter, and let it finish.
+          <div class="addbox"><code>curl -fsSL https://claude.ai/install.sh | bash</code><button class="copybtn" type="button" data-cmd="curl -fsSL https://claude.ai/install.sh | bash" aria-label="Copy the Mac install command">Copy</button></div>
+          <p class="cmdnote">That is the Mac command. On Windows, paste this one into PowerShell instead:</p>
+          <div class="addbox"><code>irm https://claude.ai/install.ps1 | iex</code><button class="copybtn" type="button" data-cmd="irm https://claude.ai/install.ps1 | iex" aria-label="Copy the Windows install command">Copy</button></div>
+          <span class="ok"><strong>It worked if</strong> you type <code>claude --version</code>, press Enter, and a version number prints back.</span></li>
+        <li><strong>Start it inside a project folder.</strong> Make a new, empty folder for your project. In the terminal, move into that folder, type <code>claude</code>, and press Enter. A browser window opens so you can sign in.
+          <span class="ok"><strong>It worked if</strong> Claude greets you in the terminal and waits for instructions. Everything it makes will land in this folder.</span></li>
+        <li><strong>Give it one small first job.</strong> Type what you want in plain words: &ldquo;Build a simple one-page website for my bakery, with our opening hours and a space for a photo. Explain each step as you go.&rdquo;
+          <span class="ok"><strong>It worked if</strong> new files appear in your folder and Claude tells you how to open the page. That is your first real job done. The tools below all plug into Claude Code the same way.</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="sect" aria-labelledby="h-howto">
+    <h2 id="h-howto">How to use this page</h2>
+    <div class="sect-body">
+      <ol class="seq">
+        <li><strong>Pick one tool.</strong> Not five. Pick the one that matches a job you already have this week.</li>
+        <li><strong>Start with the Start Here picks</strong> just below. They are the three best starting points in each group.</li>
+        <li><strong>Follow the steps on its card, in order.</strong> Each card says where to paste or click, and what you should see when it works.</li>
+        <li><strong>Ignore everything else</strong> until that one tool works. You can come back for the next one.</li>
+      </ol>
+
+      <h3>Words used on this page</h3>
+      <dl class="glossary">
+        <dt>Repo</dt><dd>A folder of project files stored online, usually on a site called GitHub. The name on each card, like obra/superpowers, is that folder's address. Tap it to visit.</dd>
+        <dt>Terminal</dt><dd>The text window on your computer where you type commands instead of clicking buttons. On a Mac it is an app called Terminal. On Windows it is PowerShell or Command Prompt.</dd>
+        <dt>Command</dt><dd>One line of text you paste into the terminal, or into Claude Code, and run by pressing Enter. Every command here sits in a dark box with a Copy button.</dd>
+        <dt>Claude Code</dt><dd>The version of Claude that works on your computer and builds things with you: pages, files, and videos. The chat talks; Claude Code does the work.</dd>
+        <dt>Plugin and skill</dt><dd>A plugin is an add-on that gives Claude Code a new ability. A skill is a set of written instructions that teaches Claude to do one job well, the same way every time.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section class="sect" aria-labelledby="h-starters">
+    <h2 id="h-starters">Start here</h2>
+    <div class="sect-body">
+      <p>New to all this? Pick one tool from this list and ignore the rest until it works. Tap a name to jump to its card.</p>
+      <div class="starters" id="starterGrid"></div>
+    </div>
+  </section>
+
+  <section class="sect" id="tools" aria-labelledby="h-tools">
+    <h2 id="h-tools">The tools</h2>
+    <div class="sect-body" style="max-width:none">
+      <div class="controls">
+        <label class="search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
+          <input id="q" type="search" placeholder="Search tools by name or job" autocomplete="off" aria-label="Search the tools" />
+        </label>
+        <div class="sortwrap">
+          <select class="sort" id="sort" aria-label="Sort tools">
+            <option value="rank">Sort: our recommended order</option>
+            <option value="name">Sort: name, A to Z</option>
+            <option value="category">Sort: by group</option>
+          </select>
+        </div>
+        <button class="toggle" type="button" id="starterToggle" aria-pressed="false">Start Here picks only</button>
+      </div>
+      <div class="chips" id="chips" role="group" aria-label="Show one group"></div>
+    </div>
+  </section>
+
+  <main class="grid" id="grid"></main>
+  <div class="empty" id="empty" role="status">
+    <h2>Nothing matches that.</h2>
+    <p>Try a shorter search, or clear everything to see all the tools again.</p>
+    <button type="button" id="clearBtn">Show all tools</button>
+  </div>
+
+  <section class="sect" id="before" aria-labelledby="h-before">
+    <h2 id="h-before">Before you install anything</h2>
+    <div class="sect-body">
+      <ul class="notes">
+        <li><strong>Only install tools you trust.</strong> These tools run on your computer, and add-ons for Claude can run code on your machine. That is normal for tools like these. It means you should install only from the official link on each card, never a lookalike site, and read what an add-on says it will do before you add it.</li>
+        <li><strong>Prices change.</strong> Prices and activity on this page were checked in October 2026 and will drift. Several tools are free for one person or a small team and charge once you grow, so check the current price before your team depends on one.</li>
+        <li><strong>Free does not always mean free for business.</strong> A few tools have their own rules for business use: Remotion (video), n8n (connecting apps), and parts of PostHog, Twenty, and Anthropic's document skills. Each card flags its own case under &ldquo;Watch out for&rdquo;.</li>
+        <li><strong>Where we could not check an install route, the card says so</strong> instead of guessing. That is why Audacity's card points you to the official download rather than a command.</li>
+      </ul>
+    </div>
+  </section>
+  </div><!-- /viewClaude -->
+
+  <div id="viewMuse" hidden>
+  <header class="hero">
+    <h1>Meet<br />Muse<span class="dot" aria-hidden="true">.</span></h1>
+    <div class="hero-copy">
+      <p class="lede">Muse is a personal assistant you talk to in plain words. On its own, Muse can think, write, plan, and research with you. Connect the apps and services you already use, and Muse can work inside them too: reading your email, checking your calendar, finding your files, drafting replies, booking tables, and keeping track of your money and your business.</p>
+      <p class="hero-note"><strong>Nothing here is connected yet.</strong> You connect each service yourself, one at a time, and only the ones you want. Muse asks before it sends a message or spends money for you.</p>
+    </div>
+  </header>
+
+  <section class="sect" id="muse-who" aria-labelledby="h-who">
+    <h2 id="h-who">Who Muse is for</h2>
+    <div class="sect-body">
+      <div class="who-row">
+        <h3>Everyday life</h3>
+        <p>You talk, Muse does the legwork. <strong>&ldquo;What is on my calendar this week, and when am I free Thursday?&rdquo;</strong> Muse can sort a stuffed inbox, find a flight and watch it for delays, book the restaurant, build a playlist for the drive, and show you what your sleep and spending looked like last month.</p>
+      </div>
+      <div class="who-row">
+        <h3>Busy professionals</h3>
+        <p>Less time re-typing your own life into apps. Muse can turn <strong>meeting notes into follow-up messages</strong>, draft documents from your own files, pull a number out of a spreadsheet, and answer &ldquo;what did we decide last month?&rdquo; from the real transcript instead of your memory.</p>
+      </div>
+      <div class="who-row">
+        <h3>Entrepreneurs and small businesses</h3>
+        <p>The work of a small team, without hiring one. Muse can check <strong>which invoices are unpaid</strong>, see which ad is working, follow up leads in your customer records, draft client replies in your voice for your approval, and keep the store, the books, and the calendar in one conversation.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sect" aria-labelledby="h-connect">
+    <h2 id="h-connect">How connecting works</h2>
+    <div class="sect-body">
+      <p>A <strong>connector</strong> is a link between Muse and one app or service you use, like your email or your calendar. Each card below says what the service is, what Muse can do with it, and why people connect it.</p>
+      <ol class="seq">
+        <li><strong>Pick one service below</strong> that matches a job you do every week. One is enough to start.</li>
+        <li><strong>Sign in with that service.</strong> Muse walks you through it, and you never hand over your password in a chat.</li>
+        <li><strong>Ask in plain words</strong>, the way you would ask a capable assistant sitting next to you.</li>
+        <li><strong>You stay in charge.</strong> Reading and looking things up is the everyday work. Anything that sends, posts, buys, or changes something goes through you first.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="sect" id="muse-tools" aria-labelledby="h-mtools">
+    <h2 id="h-mtools">The connectors</h2>
+    <div class="sect-body" style="max-width:none">
+      <div class="controls">
+        <label class="search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
+          <input id="mq" type="search" placeholder="Search connectors by name or job" autocomplete="off" aria-label="Search the connectors" />
+        </label>
+        <div class="sortwrap">
+          <select class="sort" id="msort" aria-label="Sort connectors">
+            <option value="rank">Sort: our recommended order</option>
+            <option value="name">Sort: name, A to Z</option>
+            <option value="category">Sort: by group</option>
+          </select>
+        </div>
+      </div>
+      <div class="chips" id="mchips" role="group" aria-label="Show one group"></div>
+    </div>
+  </section>
+
+  <main class="grid" id="mgrid"></main>
+  <div class="empty" id="mempty" role="status">
+    <h2>Nothing matches that.</h2>
+    <p>Try a shorter search, or clear everything to see all the connectors again.</p>
+    <button type="button" id="mclearBtn">Show all connectors</button>
+  </div>
+
+  <section class="sect" aria-labelledby="h-mnotes">
+    <h2 id="h-mnotes">Good to know before you connect anything</h2>
+    <div class="sect-body">
+      <ul class="notes">
+        <li><strong>This is a catalogue, not a connection.</strong> Listing a service here does not connect it. You connect each service separately, with that service's own sign-in.</li>
+        <li><strong>Connect one at a time, and only what you will use.</strong> Every connection gives Muse a way into that account. Start with the one that saves you the most time each week. You can disconnect any service later.</li>
+        <li><strong>Some connectors need no account.</strong> A few look things up in public information, like flight status, places, events, and product prices, and work without a sign-in. The cards say so where that is the case.</li>
+      </ul>
+    </div>
+  </section>
+  </div><!-- /viewMuse -->
+
+</div>
+
+<script>
+var CATS = [
+  "Helpers for Claude",
+  "How things look",
+  "Video",
+  "Smart tools",
+  "Building tools",
+  "Business tools",
+  "Content tools",
+  "Sound tools",
+  "Organising information",
+  "Learning & useful apps"
+];
+/* Card fields: [number, repo, group, kind in plain words, extra pick?,
+   what it does, why you would use it, [step 1, step 2, step 3],
+   sentence before command 1, command 1, sentence after command 1,
+   sentence before command 2, command 2, sentence after command 2,
+   watch out] */
+var DATA = [
+[1,"obra/superpowers",0,"Add-on for Claude",false,
+"Think of it as a strict project manager for Claude. Instead of letting Claude rush off and build the first idea that comes to mind, this add-on makes it stop, talk the job through with you, agree a plan in writing, and only then build, one small piece at a time, checking each piece as it goes.",
+"Say you want a page where clients can log in and see their documents. Without a plan, an AI helper often builds the wrong thing and you start over. With this, you approve the plan first, so what gets built is what you actually asked for.",
+["Open Claude Code, the version of Claude that works on your computer and builds things with you.",
+ "Copy the command below, paste it into the message box in Claude Code (not the terminal), and press Enter.",
+ "Start a new chat and describe what you want in plain words. Success looks like this: Claude shows you a plan and waits for your OK before building anything."],
+"This command adds Superpowers to Claude Code:",
+"/plugin install superpowers@claude-plugins-official",
+"When it finishes, Claude Code lists Superpowers as installed. Nothing else on your computer changes.",
+"A message worth copying into Claude at the start of any bigger job:",
+"Let us brainstorm first, then agree a written plan. Build one small piece at a time and check each piece works. Do not start building before we agree the plan.",
+"You send that once, at the start, and Claude follows it for the whole job.",
+"It is overkill for tiny jobs, like fixing one typo. Save it for bigger builds. It is free."],
+[2,"wshobson/agents",0,"A shelf of specialist add-ons for Claude",false,
+"A big shelf of specialist helpers for Claude Code. Instead of one general helper doing everything, you pick one specialist per job, the way you would hire a proofreader for one task and a tester for another. Each specialist only knows its own job, and knows it well.",
+"Say a form on your website keeps confusing people. You bring in the specialist whose only job is checking pages for mistakes and confusing parts, fix what it finds, and leave it there. No need to become an expert yourself.",
+["Open Claude Code.",
+ "Paste the first command below into Claude Code and press Enter. This connects the shelf; it does not install everything on it.",
+ "Pick just one specialist for the job in front of you, and install only that one with the second command. Success: the specialist shows up in Claude Code and can answer questions about that one job."],
+"This command connects the shelf of specialists to your Claude Code:",
+"/plugin marketplace add wshobson/agents",
+"Claude Code confirms the shelf was added. Nothing is installed yet; you still choose what to take off the shelf.",
+"This second command installs one specialist. Replace <plugin> with the name of the one you chose:",
+"/plugin install <plugin>",
+"That specialist is now ready to use inside Claude Code.",
+"Install one specialist at a time, never the whole shelf. The shelf is huge, and too many add-ons slow Claude down and make its answers worse."],
+[3,"anthropics/skills",0,"Skill packs made by Claude's creators",false,
+"A set of ready-made skill packs from Anthropic, the company that makes Claude. The packs teach Claude new jobs: designing nicer web pages, and creating real Word documents, PowerPoint decks, Excel spreadsheets, and PDFs. There is also a pack that helps you turn your own repeated routines into skills of your own.",
+"Say you need a slide deck for a client, or a one-page handout for a workshop. Instead of explaining the file format from scratch every time, Claude already knows how to build the file properly. You just describe what goes in it.",
+["Open Claude Code.",
+ "Paste the command below into Claude Code and press Enter. This connects Anthropic's skill shelf.",
+ "Ask Claude for something real, like the example message under the command. Success: Claude produces the finished file or page, not just advice about it."],
+"This command connects Anthropic's official skill shelf to your Claude Code:",
+"/plugin marketplace add anthropics/skills",
+"The skills are now available whenever you work in Claude Code.",
+"An example of what to type once it is set up:",
+"Build a simple, friendly landing page for an HR workshop. No purple gradient, no stock-photo look.",
+"Claude uses the design skill to build the page with your instructions as the rules.",
+"The packs that make Word, Excel, PowerPoint, and PDF files come with Anthropic's own terms. They are not fully free open software, so check those terms before using the files for paying clients."],
+[4,"tailwindlabs/tailwindcss",1,"A styling kit for web pages",false,
+"A kit of ready-made styling choices for web pages: colours, spacing, text sizes, and layouts. Instead of inventing the look of every button and heading from scratch, whoever builds your pages picks from the kit, so every page looks like it belongs to the same business. Think of it as a house style guide that the computer follows automatically.",
+"Say your business colours are one blue, one orange, and a warm off-white. You save those colours in the kit once, and every page built afterwards uses them. No more pages drifting to a slightly different blue each time.",
+["Open the terminal (the text window on your computer) inside your project folder. If you do not have a project yet, this is a good thing to ask Claude Code to set up for you.",
+ "Paste the command below and press Enter. It downloads the kit into your project.",
+ "Success: the download finishes without red error text. Your pages can now use the kit's styling choices, and your brand colours get saved in one place."],
+"This command downloads Tailwind, plus the small helper that connects it to your project:",
+"npm install tailwindcss @tailwindcss/vite",
+"After it finishes, your colours and fonts are saved in one settings spot, and every page picks them up from there.",
+"",
+"",
+"",
+"This is the newer version 4, which works differently from older versions. If you follow a video or written tutorial, make sure it says version 4, or the steps will not match what you see."],
+[5,"shadcn-ui/ui",1,"Ready-made page parts that you own",false,
+"A box of ready-made parts for web pages: buttons, forms, pop-up boxes, menus, and more. The special thing here is that the parts are copied into your project as your own files. You can change anything about them, and no company can alter them, charge you for them later, or take them away.",
+"Say you need a sign-up form with several steps: name, then company, then a review screen. Instead of building each screen from nothing, you take the ready-made parts and change the words and colours to yours.",
+["Open the terminal inside your project folder.",
+ "Paste the first line of the command below and press Enter. It asks a few setup questions; the standard answers are fine. Then paste the second line, which brings in the parts listed.",
+ "Success: new files appear in your project, and the parts show up on your page, ready to restyle with your colours."],
+"The first line sets the kit up. The second line copies in six common parts: a button, a card, a pop-up box, a form, a text box, and a dropdown menu:",
+"npx shadcn@latest init\nnpx shadcn@latest add button card dialog form input select",
+"From then on the parts live in your project. You add more parts the same way, one line per part.",
+"",
+"",
+"",
+"Because the parts are your own copies, they do not update themselves. If a fix comes out later, someone has to update your copies by hand. That is the trade-off for owning them."],
+[6,"TanStack/table",1,"A table builder for long lists",false,
+"A tool that turns a long list into a proper table on a web page: one you can sort by clicking a heading, search with a search box, and move through page by page. It does the hard sorting and organising work behind the scenes. The look of the table is still up to you.",
+"Say you have a list of 300 employees or clients. With this, a visitor can click “Name” to sort A to Z, type in a search box to find one person fast, and tick boxes next to names to do something with several people at once, like sending a group email.",
+["Open the terminal inside your project folder.",
+ "Paste the command below and press Enter to add the table tool to your project.",
+ "Success: the install finishes without errors. The table itself still needs to be built into a page, which is a good job to hand to Claude Code, naming this tool in your request."],
+"This command adds the table tool to your project:",
+"npm install @tanstack/react-table",
+"Nothing appears on screen by itself. It is an ingredient, ready for whoever builds the page.",
+"",
+"",
+"",
+"This tool does not design anything; someone still has to build the table's look. And install the current version rather than trusting version numbers quoted in older articles, which may be out of date."],
+[7,"motiondivision/motion",1,"Movement for web pages",true,
+"A tool that adds smooth movement to web pages: text that fades in gently, sections that slide into place as you scroll down, and buttons that respond when tapped. Used gently, it makes a page feel finished and alive instead of flat and static.",
+"Say you are showing a client their new homepage. A heading that settles in smoothly and sections that appear as you scroll make the demo feel polished, without changing a single word the page says.",
+["Open the terminal inside your project folder.",
+ "Paste the command below and press Enter.",
+ "Success: the install finishes cleanly. Then ask for one small movement first, like the main heading fading in, and check it on your phone before adding more."],
+"This command adds the movement tool to your project:",
+"npm install motion",
+"Movement is then added page by page, in small touches, wherever it helps.",
+"",
+"",
+"",
+"The main tool is free. There is a paid extra tier you do not need to start. Keep movement gentle: too much of it annoys visitors, and moving pages can make some people feel unwell."],
+[8,"remotion-dev/remotion",2,"A video maker that reuses one design many times",false,
+"A way to make videos using the same skills used to build web pages. You design the video once, like a template letter, and then swap in different names, numbers, or clips to make many versions. The computer then produces the finished video file for you.",
+"Say you make a short welcome video for each new client, with their company name in it. Instead of editing every one by hand, you change the name in a list and the computer produces the new video, in wide size for YouTube and tall size for phones.",
+["Open the terminal.",
+ "Paste the command below and press Enter. It creates a new, empty video project called my-video.",
+ "Success: a new folder appears, and you can preview the blank video in your browser. From there, you or Claude fills the template with your words, colours, and clips."],
+"This command sets up a fresh, blank video project on your computer:",
+"npx create-video@latest --yes --blank my-video",
+"You now have a video project you can preview and edit. Each design can be re-made with new details in minutes.",
+"",
+"",
+"",
+"Free for very small teams (up to 3 people). If your company is bigger, it needs a paid licence, so check the current price on their site before building client work on it."],
+[9,"heygen-com/hyperframes",2,"A video maker your AI helper can drive",false,
+"A video maker designed so an AI helper like Claude can do the editing for you. You describe the video in plain words, and the helper builds it from your text, clips, colours, and music, then produces the finished video file. It checks its own work as it goes.",
+"Say you need a 30-second promo for a workshop: a title that fades in, a short clip behind it, and quiet music underneath. You describe that in one sentence, and the helper plans it, builds it, and hands you the video.",
+["Open Claude Code.",
+ "Paste the two commands below, one at a time, pressing Enter after each. The first connects HyperFrames; the second installs it.",
+ "Success: Claude gains a new skill called /hyperframes. Type /hyperframes and describe your video in plain words, like the example under the commands."],
+"These two commands connect HyperFrames to Claude Code and install it:",
+"claude plugin marketplace add heygen-com/hyperframes\nclaude plugin install hyperframes@hyperframes",
+"Claude can now make videos whenever you ask with /hyperframes.",
+"An example of what to type once it is installed:",
+"Using /hyperframes, create a 10-second product intro with a fade-in title, a background video, and subtle background music.",
+"Claude plans the video, builds it, checks it, and renders the finished file.",
+"It is still young (not yet at version 1) and changes often, so expect the occasional rough edge. Your computer also needs two free programs installed first: Node (version 22 or newer), which many tools on this list need in order to run, and FFmpeg, which is also on this list."],
+[10,"FFMPEG/FFmpeg",2,"The video and sound workhorse",false,
+"A free tool that does the hard, fiddly jobs with video and sound files: trimming the start and end, shrinking files so they upload faster, changing one format into another, and converting a whole folder of files at once. Many friendlier video tools quietly use it behind the scenes. You control it by typing commands instead of clicking buttons.",
+"Say you recorded a one-hour workshop and only need a two-minute clip from the middle, small enough to email. One command cuts it out and shrinks it, instead of an hour of dragging clips around in an editing program.",
+["Open the terminal.",
+ "Paste the command below and press Enter. It installs FFmpeg on a Mac. On Windows, download it from ffmpeg.org instead.",
+ "Success: type ffmpeg and press Enter. If a page of information about the program appears, it is installed and ready."],
+"This command installs FFmpeg using Homebrew, the standard installer program for Macs:",
+"brew install ffmpeg",
+"FFmpeg is now ready whenever you, or a tool like HyperFrames, need to cut, shrink, or convert a video or sound file.",
+"An example command. In plain words, it takes a video called in.mov, skips the first 5 seconds, keeps 2 minutes, makes it widescreen size, and saves a smaller file called out.mp4:",
+"ffmpeg -i in.mov -ss 00:00:05 -t 00:02:00 -vf scale=1920:-2 -c:v libx264 -crf 23 -c:a aac out.mp4",
+"You would normally change the file names to your own. Claude can write the exact command for you if you describe the job in plain words.",
+"The commands look intimidating, but you rarely write them yourself: Claude can write them if you say what you want. If you ever sell software with FFmpeg inside it, check its free-use terms first, because they depend on how it was packaged."],
+[11,"vercel/ai",3,"A kit for adding a chat helper to your app",false,
+"A building kit that lets you add an AI chat helper inside your own app or website, so visitors can ask questions and watch the answers appear word by word. Think of it as the plumbing between your app and the AI: your app asks, the AI answers, and this kit carries the messages back and forth.",
+"Say your HR app has a box where a manager types “draft a friendly reminder about Friday's training” and watches the reply appear, written from real information in your app instead of guesswork.",
+["Open the terminal inside your project folder.",
+ "Paste the command below and press Enter. It adds the kit, plus the connector piece for Claude.",
+ "Success: the install finishes cleanly. Building the chat box itself is a job for Claude Code; name this kit in your request so it uses the standard parts."],
+"This command adds the chat kit and the piece that connects it to Claude:",
+"npm install ai @ai-sdk/anthropic",
+"Your app can then be given a working AI chat feature, one step at a time.",
+"",
+"",
+"",
+"The current version (7) changed how some things are named, so older tutorials may not match. Your computer also needs Node version 22 or newer. Node is the free background program that many tools on this list need in order to run."],
+[12,"modelcontextprotocol/typescript-sdk",3,"A kit for connecting your information to AI helpers",false,
+"A kit for building a safe doorway between an AI helper and your own information. MCP is the shared language AI helpers use to ask outside systems for things, the way USB is the shared plug that lets any device connect to your computer. This kit lets you build the doorway, so Claude can look things up in your system, only the things you allow.",
+"Say your candidate records live in your own system. Instead of copying and pasting them into a chat every time, you build one doorway, and Claude can ask your system directly: for example, show me the list of candidates, or sum up this policy document.",
+["Open the terminal inside your project folder.",
+ "Paste the command below and press Enter to add the current (version 2) kit.",
+ "Success: the install finishes cleanly. Start by letting Claude do one safe, read-only job, like looking something up. Only add anything that changes information later, and keep an approval step in place."],
+"This command adds the current version of the connection kit, plus a helper that checks information arrives in the right shape:",
+"npm install @modelcontextprotocol/server zod",
+"You now have the parts to build one careful connection between Claude and your own information.",
+"",
+"",
+"",
+"There is an older version 1 kit with a similar name. Building on the old one means redoing the work later, so use this one. And never put private information on the open internet without a login protecting it."],
+[13,"n8n-io/n8n",3,"Connects your apps together, no coding",false,
+"A tool that connects your apps together so work happens on its own, like a row of dominoes. When something happens in one app, for example a form is filled in, it can set off the next steps in others: save the details, post a message to your team, file a document for a human to review. You build these chains by dragging boxes on a screen, not by writing code.",
+"Say someone fills in the enquiry form on your website. n8n can save their details to your records, post a note in your team's chat, and pull the text out of any PDF they attached, flagged for a person to check. Nothing goes back to the customer automatically unless you set it up that way.",
+["The simplest start is the free trial on n8n's own website, where there is nothing to install. The package name below is the do-it-yourself route: it runs n8n on a computer you control, using a free program called Docker, which runs apps in tidy, separate boxes.",
+ "When it starts, open the address it gives you in your browser. It uses port 5678, which is just a numbered door on your computer.",
+ "Success: you see the n8n editor. Build one small chain first: a form comes in, a record is saved, a message is posted to your team chat."],
+"This is the name of the ready-made n8n package that Docker downloads and runs:",
+"docker.n8n.io/n8nio/n8n",
+"Once n8n is running, everything else happens by dragging boxes in your browser. No more commands.",
+"",
+"",
+"",
+"n8n is free to run yourself, but its licence (called fair-code) limits some business uses, so check its terms before using it for paying clients. If you run it yourself, keeping it updated and secure is your job."],
+[14,"ollama/ollama",3,"Runs an AI privately on your own computer",true,
+"A program that runs an AI entirely on your own computer, with nothing sent to the internet. It is slower and less powerful than the big online AIs, but it is private, it works with the internet off, and it costs nothing to use.",
+"Say you need a first draft of a sensitive letter, like an offer letter or a performance note. With Ollama, the words never leave your computer, so nothing private is sent to an outside company.",
+["Open the terminal.",
+ "Paste the first line of the command below and press Enter to install Ollama. Then paste the second line, replacing <model> with the name of the AI you want to download (for example, llama3).",
+ "Success: the AI downloads. These files are big, so this can take a while. After that, you can talk to it using the second command below."],
+"The first line installs Ollama. The second line downloads one AI onto your computer; <model> is where the AI's name goes:",
+"curl -fsSL https://ollama.ai/install.sh | sh\nollama pull <model>",
+"The AI now lives on your computer and works even with the internet off.",
+"To talk to the AI you downloaded, type this, again with its name in place of <model>:",
+"ollama run <model>",
+"A chat opens right there in the terminal. Type your request in plain words.",
+"How well it works depends on your computer; an older laptop will be slow. Each AI you can download has its own rules about business use, so check the one you pick. And this suits one person's private drafts, not a whole team using it at once."],
+[15,"microsoft/TypeScript",4,"A safety checker for code",false,
+"A version of the language most web pages are written in, with a safety checker added. The checker reads the code before a page goes live and spots mistakes, like a name spelled two different ways, or a number used where words were expected. It is spell-check for code: it underlines problems while there is still time to fix them.",
+"Say a sign-up form asks for a phone number, but somewhere the code treats it as a date. The checker flags that before a customer ever sees a broken form.",
+["Open the terminal inside your project folder. Many projects already include this checker; if Claude set your project up, it is probably already there.",
+ "If it is not, paste the command below and press Enter to add it.",
+ "Success: you, or Claude, can run the checking command shown under the install command. It lists any mistakes it finds, or confirms there are none."],
+"This command adds the safety checker to your project:",
+"npm install -D typescript",
+"The checker is ready to run whenever the code changes.",
+"This command runs the check across the whole project:",
+"npx tsc --noEmit",
+"It prints a list of problems to fix, or stays quiet if everything checks out.",
+"The newest version was partly rewritten and a few advanced parts are still catching up. That only matters for unusual projects. What matters for you: keep the strict checking switched on, especially for code an AI wrote."],
+[16,"vitejs/vite",4,"Starts new web projects quickly",false,
+"The standard starting tool for new web projects. It creates a fresh, tidy project folder with everything in place, and while you work it shows your changes on screen instantly, so you see every edit the moment it is made instead of waiting.",
+"Say you want a small website for a new workshop. Vite gives you the blank project in seconds, and as you or Claude change the words and colours, the page updates live, so you react to what you actually see.",
+["Open the terminal in the folder where you keep your projects.",
+ "Paste the command below and press Enter. You can change my-app to your project's name.",
+ "Success: a new folder appears with your project inside, and a web address is shown where you can watch the page as you build it."],
+"This command creates a new project in the standard layout. React is the popular page-building system that most tools on this list are designed to work with:",
+"npm create vite@latest my-app -- --template react-ts",
+"You have a working blank website. A good next step is adding the Tailwind styling kit from this list, then building one real page before anything fancy.",
+"",
+"",
+"",
+"Your computer needs a recent version of Node, the free background program these tools run on (version 20.19 or newer, or 22.12 or newer). With an old version, things fail with confusing error messages that look unrelated."],
+[17,"biomejs/biome",4,"A tidy-up and rule checker for code",false,
+"A housekeeper for your project. In one quick pass it tidies the layout of the code so everything is neat and consistent, and checks it against rules you set, like “only use our brand colours”. It stops small messes piling up when several people, or an AI, write code in the same project.",
+"Say Claude writes a new page using a random blue instead of your brand blue. Biome can be set to flag exactly that, and to tidy the page's layout automatically, before anyone sees it.",
+["Open the terminal inside your project folder.",
+ "Paste the first line of the command below to install Biome, then the second line to set it up.",
+ "Success: a settings file appears in your project. From then on, one command (shown under the install command) tidies and checks everything."],
+"The first line installs Biome at one exact version, so it behaves the same on every computer. The second line creates its settings file:",
+"npm install --save-dev --save-exact @biomejs/biome\nnpx @biomejs/biome init",
+"Biome is ready. Run the tidy-and-check command below after any big change.",
+"This command tidies and checks the whole project, fixing what it safely can:",
+"npx @biomejs/biome check --write .",
+"Look over what it changed the first few times, until you trust it.",
+"Always install the exact version, as the command does, so everyone's copy behaves the same. Its tidying is nearly identical to the older tool it replaces, but not 100% the same, so expect tiny differences if you switch from that one."]
+];
+
+DATA.push(
+[18,"vercel/next.js",5,"Builds a whole website in one project",false,
+"A system for building a complete website in one project: the public pages everyone sees, plus private pages behind a login, like client dashboards. It is the all-in-one option, which is why it suits a business site that also has tools for customers.",
+"Say your website needs a public homepage, a free quiz visitors can take, and a private area where clients see their own results. Next.js holds all three in one project, instead of three separate projects to look after.",
+["Open the terminal in the folder where you keep projects.",
+ "Paste the command below and press Enter. It asks you a few questions as it sets up.",
+ "Answer yes to the three choices that match this list: TypeScript (the safety checker), Tailwind (the styling kit), and App Router (its newer way of organising pages). Success: a new project appears, and the homepage is the first page to build."],
+"This command starts a new Next.js project and asks the setup questions as it goes:",
+"npx create-next-app@latest",
+"You have a working website project. Build the public homepage first, then add the private pages.",
+"",
+"",
+"",
+"Stay on version 16.4.3 or newer. Updates in October 2026 fixed serious security holes, the kind that let strangers break in, and older versions should not be used."],
+[19,"supabase/supabase",5,"The back room for your app: records, logins, files",false,
+"The back room that powers an app. It stores your records in neat tables, handles logins so people can sign in safely, keeps uploaded files, and makes sure each customer only ever sees their own information. If an app is a shop, Supabase is the stockroom, the filing cabinet, and the lock on the door, all in one.",
+"Say clients upload documents and take a short assessment on your site. Supabase keeps each client's files and answers separate and private, so one client can never see another's, while you can see everything you are meant to.",
+["The easy route: create a free account at supabase.com and start a project there. The commands below are the practice route, which runs a copy on your own computer first.",
+ "Paste the commands one at a time, pressing Enter after each. The first two set up and start the practice copy; the third connects your app to it.",
+ "Success: you can open a dashboard in your browser showing your tables. Create one table first, switch on the privacy rules (you will see them called row-level security, which means each row of information is locked to its owner), and test by signing in as a pretend customer, not as yourself."],
+"These commands set up a practice copy of Supabase on your computer, then add the piece that lets your app talk to it:",
+"npx supabase init\nnpx supabase start\nnpm install @supabase/supabase-js",
+"Your app now has a back room: records, logins, and file storage, ready to use.",
+"",
+"",
+"",
+"Never leave a table open for anyone on the internet to read. In late October 2026, Supabase changed how new tables are exposed, so re-check your privacy settings after that change, and treat that check as part of every change you make. This is the caution that matters most on this page."],
+[20,"twentyhq/twenty",5,"A customer tracker you can see inside",false,
+"A free customer tracker: the kind of software often called a CRM, which is really just an organised address book for your business, with notes on every deal. It tracks companies, people, and opportunities (deals at each stage, from first chat to signed). Because it is open, you or your developer can read how it works and change it, unlike most customer trackers.",
+"Say you are following up ten possible clients. Twenty keeps each one at the right stage (first chat, call done, proposal sent, won), and it can add a “start onboarding” task by itself the moment a deal is marked won, so nobody falls through the cracks.",
+["Open the terminal. This one is more involved: it downloads Twenty's files, and runs using Docker, the free program that runs apps in tidy, separate boxes.",
+ "Paste the command below to download the files. Then follow the setup guide inside the folder called packages/twenty-docker, where you will set a secret key (a long private password for the system, labelled APP_SECRET) before starting it.",
+ "Success: Twenty opens in your browser. Set up your stages first, to match how you actually sell, and only then add real contacts."],
+"This command downloads Twenty's project files to your computer:",
+"git clone https://github.com/twentyhq/twenty.git",
+"The files are on your computer. The setup guide inside them walks you through switching it on.",
+"",
+"",
+"",
+"Most of Twenty is free to use and change, but a few big-company features sit under a paid licence, so check before relying on them. Running it yourself needs a reasonably strong computer (about 2GB of spare memory), and back it up before updating. Always use a recent version: a fix in version 2.7.0 (October 2026) closed a hole that could have exposed login details."],
+[21,"posthog/posthog",6,"See how people actually use your product",false,
+"A tool that watches how people use your website or app and shows you the story in plain charts: how many started your quiz, how many finished, and where the rest gave up. It can also test two versions of a page to see which one works better, and show recordings of visits so you can see where people got stuck.",
+"Say half the people who start your free assessment never finish it. PostHog shows you the exact step where they leave, so you fix the real problem instead of guessing.",
+["Create a free account at posthog.com and start a project. You will be given a project key, a short code that identifies your project.",
+ "Open the terminal inside your app project and paste the command below to add PostHog to it.",
+ "Success: once the key is added to your app (a good job for Claude Code), your PostHog screen starts showing real visits. Track one simple path first, like started assessment to finished assessment."],
+"This command adds PostHog to your app:",
+"npm install posthog-js @posthog/react",
+"Your app can now report what visitors do, and you can see it in your PostHog dashboard.",
+"",
+"",
+"",
+"The main tool is free and open; some big-company features are under a separate paid licence. You pay based on how much you use, so set a spending limit in the settings. Use the free hosted version rather than running it yourself, which is a big job. And be thoughtful about recording visits: only record what you genuinely need."],
+[22,"novuhq/novu",6,"Sends all your notifications for you",false,
+"A service that handles all the notifications your app sends: the bell icon inside the app, emails, and reminders, all run from one place. Instead of building each kind of message separately, you describe the message once and Novu delivers it every way you have chosen.",
+"Say a client books an interview. One setup in Novu can show them a note inside the app and send a matching email, so the reminder looks and sounds the same everywhere, and you only wrote it once.",
+["Create an account at novu.co and start a project. You will get two identifying codes for your app.",
+ "Open the terminal inside your app project and paste the command below to add Novu's parts.",
+ "Success: the notification bell can be placed in your app (ask Claude Code to do that part), and you can set up one message that arrives both in the app and by email, then test it on yourself."],
+"This command adds Novu's ready-made notification parts to your app:",
+"npm install @novu/react",
+"Your app has a working notifications area, ready for its first message.",
+"",
+"",
+"",
+"Check the current price before building a lot on it, as pricing changes. If you ever run it yourself instead of using their service, make sure you are reading the latest version of their files, as older copies circulate."],
+[23,"TryGhost/Ghost",6,"A home for your writing and newsletter",false,
+"A clean, simple home for publishing: a website, a blog, and an email newsletter in one place, with the option for readers to pay for membership. It is built for writers rather than technicians, so the writing screen is calm and free of clutter.",
+"Say you write a weekly post about AI at work. In Ghost you write it once, it appears on your site, and it lands in your subscribers' inboxes. No separate email tool needed.",
+["The simplest route is Ghost's own hosting, which you pay for and they run for you. The command below is the free, do-it-yourself trial on your own computer.",
+ "Paste the command into the terminal and press Enter. It downloads Ghost and sets up a practice copy.",
+ "Success: Ghost opens in your browser. Write one real post, send it to yourself as a test, and see how it looks in your own inbox before publishing anything."],
+"This command downloads Ghost and installs a practice copy on your computer:",
+"curl -fsSL https://docker.ghost.org/install.sh | bash -s -- install --local",
+"You have a working practice copy of your future publication, safe to experiment with.",
+"",
+"",
+"",
+"Ghost itself is free and open. If you run a real publication yourself, the technical care (backups, updates, security) is on you. Its built-in sending works through one email provider, Mailgun. And its page designs use a system called Handlebars, rather than the page-building system used elsewhere on this list."],
+[24,"openai/whisper",7,"Turns recordings into text",false,
+"An AI program from OpenAI that listens to a recording and types out what was said. It runs on your own computer, in English, Spanish, and many other languages, so private recordings never have to be uploaded anywhere. It can also make the timed caption files used for subtitles on videos.",
+"Say you record a workshop or a podcast episode. Whisper gives you a written version you can search, quote from, turn into a blog post, and use as captions, in about the time it takes to make coffee.",
+["Open the terminal. Whisper needs FFmpeg (also on this list) installed first, because it uses it to open sound files.",
+ "Paste the first command below to install Whisper. Then use the second command to type out a recording, changing episode.wav to your file's name.",
+ "Success: a text file and a caption file appear next to your recording. Read through the captions once before publishing; names are the part it gets wrong most often."],
+"This command installs Whisper on your computer:",
+"pip install -U openai-whisper",
+"Whisper is ready. The command below runs it on one recording.",
+"This command types out a recording called episode.wav and makes a caption file (the kind called SRT, which is the standard file for subtitles):",
+"whisper episode.wav --model base --output_format srt",
+"The typed-out text and captions land in the same folder as your recording.",
+"It works on finished recordings, not live conversation. In quiet gaps it sometimes invents words that were never said, so always proofread. Get people's permission before recording and typing them up. For long recordings, a faster computer helps a lot."],
+[25,"audacity/audacity",7,"A free sound editor",false,
+"The classic free program for editing sound, used by podcasters everywhere. You see your recording as a wavy line. You can cut out the rambling parts, quieten background noise, even out the volume, layer your voice over music, and save the finished episode ready to publish. All clicking and dragging; no commands at all.",
+"Say your podcast episode has a long pause, a dog barking in the middle, and quiet parts nobody can hear in a car. In Audacity you cut the pause, soften the noise, and even out the volume, in a few minutes.",
+["Download it from the official site, audacityteam.org, and install it like any other program. There is deliberately no command on this card: we could not verify a safe one, and the official download is the route we trust.",
+ "Open one real episode and try the three basic fixes: cutting (select and delete), noise reduction, and volume levelling. All three live under the Effect menu.",
+ "Success: you save a finished sound file (File menu, then Export) that sounds clear on your phone's speaker."],
+"",
+"",
+"",
+"",
+"",
+"",
+"Only download it from the official site; copycat sites bundle unwanted extras. The newest version (4) saves projects in a new format, so very old project files need a check before you rely on them. Use version 4.0.1 or newer, not 4.0.0, which had early problems."],
+[26,"wavesurfer-js/wavesurfer.js",7,"A sound player that draws the sound",true,
+"A player for web pages that draws your recording as a wavy line listeners can see and click. Clicking anywhere on the wave jumps the sound to that exact moment. You can add markers for chapters, so people go straight to the part they want instead of hunting for it.",
+"Say an episode covers three topics. With markers on the wave, a listener taps “pricing” and hears that part immediately, instead of scrubbing back and forth hoping to land on it.",
+["Open the terminal inside your project folder.",
+ "Paste the command below and press Enter to add the player to your project.",
+ "Success: the install finishes cleanly. The player is then built into a page (a job for Claude Code), pointing at one of your recordings."],
+"This command adds the waveform player to your project:",
+"npm install wavesurfer.js",
+"Your pages can now show a clickable picture of a recording.",
+"",
+"",
+"",
+"For long recordings, the page should be given the wave's shape in advance, or it may load slowly. Sound files stored online need a permission setting before the player can read them. And sound can only start after a visitor taps something, never on its own."],
+[27,"tonejs/Tone.js",7,"Makes music inside a web page",false,
+"A kit for making music and sound inside a web page: notes, rhythms, and simple instruments that play in the visitor's browser. It powers interactive sound, like a page where tapping buttons plays a tune, or gentle generated music for a creative project.",
+"Say your music project has a page where visitors tap pads to build a small loop from your sounds. Tone.js is what makes those taps play in time, like a tiny drum machine living in the browser.",
+["Open the terminal inside your project folder.",
+ "Paste the command below and press Enter.",
+ "Success: the install finishes cleanly. The first thing to build with it (ask Claude Code) is one button that plays one note when clicked. Sound in a browser is only allowed after a click, so every project starts this way."],
+"This command adds the music kit to your project:",
+"npm install tone",
+"Your pages can now make sound and music, starting from a single button and a single note.",
+"",
+"",
+"",
+"It is free and open. The one rule to remember: browsers block sound until the visitor clicks or taps something, so design for a Start button. Some very old help pages online describe an outdated way of sending sound to the speakers; current help pages have the right one."],
+[28,"facebook/docusaurus",8,"Turns your guides into a searchable help site",false,
+"A tool that turns your written guides into a tidy, searchable website of their own, like a help centre. You write in simple documents, and it builds the site with a contents list, a search box, and the ability to keep older versions of a guide when things change.",
+"Say your clients keep asking the same how-to questions. You put the answers in one help site, send people the link, and update each answer in one place when something changes, instead of re-sending documents.",
+["Open the terminal in the folder where you keep projects.",
+ "Paste the command below and press Enter. It creates a new help site called fyhr-docs; you can rename it to suit.",
+ "Success: a new project appears and you can preview the site in your browser. Move one existing guide in first and try the search box before moving the rest."],
+"This command creates a new help-centre website using the standard layout:",
+"npx create-docusaurus@latest fyhr-docs classic --typescript",
+"You have a working help site. It lives as its own website, separate from your main app.",
+"",
+"",
+"",
+"It is a separate website, not part of your app, so it has its own address and its own updates to look after. Your computer needs Node version 20 or newer: Node is the free background program many tools on this list use."],
+[29,"duckdb/duckdb",8,"Asks questions of big spreadsheets, fast",false,
+"A tool for asking questions of big spreadsheets and data files, without setting up any servers. You point it at a file you already have, like an export of your survey results, and ask questions in a simple written language called SQL. It answers things like “what was the average score for each group?” in seconds.",
+"Say you export 5,000 assessment answers into a spreadsheet file and want the average readiness score for each company size. DuckDB answers that with one question, on your laptop, instead of you wrestling with pivot tables.",
+["Open the terminal.",
+ "Paste the command below and press Enter to install it.",
+ "Success: you can run a question against one of your real files, like the example below. Check the first answer against a count you do by hand, so you know you can trust the pattern."],
+"This command installs DuckDB on your computer:",
+"pip install duckdb",
+"DuckDB is ready to answer questions about your files.",
+"An example question. In plain words it says: from the file called export.csv, show each group and its average readiness score:",
+"SELECT cohort, AVG(readiness) FROM 'export.csv' GROUP BY cohort;",
+"You write your own version by changing the file name and the words in brackets to match your spreadsheet's column headings.",
+"It answers questions about files; it is not a replacement for the database that runs your app. Files saved by the newest version (2.0) cannot be opened by older versions, so keep everyone who shares files on the same version."],
+[30,"apache/echarts",8,"Makes charts for your pages",false,
+"A chart maker for web pages: bar charts, line charts, and funnels (charts that show how many people make it through each step, and where they drop off). It takes your real numbers and draws them clearly, inside your own pages, with no separate reporting service to pay for.",
+"Say a client dashboard needs to show readiness scores across five areas. This draws that as a clean bar chart from the real results, and the chart updates whenever the numbers do.",
+["Open the terminal inside your project folder.",
+ "Paste the command below and press Enter. It adds the chart maker, plus the piece that connects it to your pages.",
+ "Success: the install finishes cleanly. Build one chart from real numbers first, and only add the chart types each page actually uses, so pages stay fast."],
+"This command adds the chart maker to your project:",
+"npm install echarts echarts-for-react",
+"Your pages can now draw charts from your real data.",
+"",
+"",
+"",
+"It only draws charts; it does not collect or store your numbers. The full package is large, so pages should load only the chart types they use, or they will feel slow on phones."],
+[31,"excalidraw/excalidraw",9,"A friendly whiteboard for sketching ideas",false,
+"A whiteboard you draw on in your browser, with a hand-drawn look that keeps things feeling like a sketch rather than a final design. You can use it free on its website with nothing to install, or build it into your own app so clients can sketch along with you inside a workshop page.",
+"Say you are mapping how a client's hiring process works today. You sketch the steps together live, boxes and arrows, and afterwards save the picture to drop into the follow-up document you send them.",
+["For a one-off sketch, skip installing entirely: open excalidraw.com in your browser and start drawing.",
+ "To build it into your own app instead, open the terminal in your project and paste the command below.",
+ "Success: the whiteboard appears inside your page. Sketch one real process with it, then use its Export button to save the picture for your document."],
+"This command adds the whiteboard to your project, along with the two basic parts it needs in order to run:",
+"npm install react react-dom @excalidraw/excalidraw",
+"The whiteboard is ready to place on a page.",
+"",
+"",
+"",
+"The whiteboard itself is free and open. The polished hosted version with extra collaboration features, called Excalidraw+, is a separate paid product, so do not confuse the two when pricing a project."],
+[32,"kamranahmedse/developer-roadmap",9,"Maps that show what to learn next",false,
+"A set of free maps showing the order in which to learn a skill, like a course catalogue drawn as a subway map. Each map shows the topics, which ones matter most, and where to start, for paths like building websites or working with AI. There is nothing to install; you just read them in your browser.",
+"Say you want to know what you, or a new hire, should learn next for AI work. You walk the AI Engineer map, tick off what is already covered, and the gaps become your learning plan, instead of guessing or buying random courses.",
+["Go to roadmap.sh in your browser and pick the map closest to your goal. Nothing to install.",
+ "Work down the map and honestly mark what you already know and what you do not.",
+ "Success: you have a short list of gaps, ideally three, that would actually change your work. Plan to learn those, not the whole map. The commands below are only for running your own private copy of the site, which most people never need."],
+"Optional, for running your own copy only: these commands download the site and start it on your computer:",
+"git clone https://github.com/kamranahmedse/developer-roadmap.git\nnpm install\nnpm run dev",
+"Your own copy of the maps opens in your browser. The public site at roadmap.sh does the same job with none of this.",
+"",
+"",
+"",
+"The maps are deliberately huge; they cover far more than any one person needs. Treat them as a menu, not a to-do list. Some of the courses and books they link to cost money."],
+[33,"paperless-ngx/paperless-ngx",9,"A searchable filing cabinet for your documents",false,
+"A private filing cabinet for your paperwork that reads what you feed it. Drop in contracts, agreements, and invoices, and it reads the text inside them, even scanned pages, files them away with labels, and lets you search the actual words inside every document later.",
+"Say a client asks what a contract from two years ago says about cancelling. Instead of digging through folders, you type a phrase from that part of the contract and the document appears, because Paperless read and remembered every word.",
+["This one runs on a computer you control, using Docker (the free program that runs apps in tidy, separate boxes) and the setup script in the project's files. For a first time, do this setup with Claude Code or a technical friend helping.",
+ "Before the first run, set a real secret key, which is a long private password for the system (you will see it labelled PAPERLESS_SECRET_KEY), as the setup instructions describe.",
+ "Success: you can open Paperless in your browser and feed it one folder of real contracts. Search for a phrase you know is in one of them. If it finds it, the system works, and you can move the rest of your paperwork in."],
+"There is no single copy-and-paste command for this one. The project provides a guided setup script, and the honest route for a first-timer is to run that setup with help, using the steps above.",
+"",
+"",
+"",
+"",
+"",
+"It is free and open. Because it runs on your computer, backups and keeping it safe are your responsibility. The newest version no longer locks the files themselves, so make sure the computer's own storage is password-protected. There is no official phone app, despite lookalikes in app stores."]
+);
+
+var STARTERS = {
+  0:["obra/superpowers","wshobson/agents","anthropics/skills"],
+  1:["tailwindlabs/tailwindcss","shadcn-ui/ui","TanStack/table"],
+  2:["remotion-dev/remotion","heygen-com/hyperframes","FFMPEG/FFmpeg"],
+  3:["vercel/ai","modelcontextprotocol/typescript-sdk","n8n-io/n8n"],
+  4:["microsoft/TypeScript","vitejs/vite","biomejs/biome"],
+  5:["vercel/next.js","supabase/supabase","twentyhq/twenty"],
+  6:["posthog/posthog","novuhq/novu","TryGhost/Ghost"],
+  7:["openai/whisper","audacity/audacity","tonejs/Tone.js"],
+  8:["facebook/docusaurus","duckdb/duckdb","apache/echarts"],
+  9:["excalidraw/excalidraw","kamranahmedse/developer-roadmap","paperless-ngx/paperless-ngx"]
+};
+var starterSet = {};
+Object.keys(STARTERS).forEach(function(k){ STARTERS[k].forEach(function(r){ starterSet[r]=true; }); });
+
+var state = { q:"", cat:-1, sort:"rank", startersOnly:false };
+var grid = document.getElementById("grid");
+var emptyEl = document.getElementById("empty");
+
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function inl(s){ return esc(s).replace(/`([^`]+)`/g,"<code>$1</code>"); }
+
+function codebox(before, cmd, after){
+  if (!cmd) return "";
+  var h = "";
+  if (before) h += '<p class="cmdlead">'+inl(before)+'</p>';
+  h += '<div class="addbox"><code>'+esc(cmd)+'</code><button class="copybtn" type="button" data-cmd="'+esc(cmd)+'">Copy</button></div>';
+  if (after) h += '<p class="cmdnote">'+inl(after)+'</p>';
+  return h;
+}
+
+function cardHTML(r){
+  var num=r[0], repo=r[1], cat=r[2], type=r[3], ext=r[4], what=r[5], why=r[6], steps=r[7];
+  var b1=r[8], cmd1=r[9], a1=r[10], b2=r[11], cmd2=r[12], a2=r[13], caution=r[14];
+  var h = '<article class="entry" id="repo-'+num+'" data-repo="'+esc(repo)+'">';
+  h += '<h3><a href="https://github.com/'+esc(repo)+'" target="_blank" rel="noopener">'+esc(repo)+'</a></h3>';
+  h += '<p class="meta"><span class="grp">'+esc(CATS[cat])+'</span><br />'+esc(type);
+  if (ext) h += '<br /><span class="pick extra">Extra pick</span>';
+  else if (starterSet[repo]) h += '<br /><span class="pick">Start Here pick</span>';
+  h += '</p>';
+  h += '<p><b>What it does.</b> '+inl(what)+'</p>';
+  h += '<p><b>Why you would use it.</b> '+inl(why)+'</p>';
+  h += '<div><h4>How to use it</h4><ol class="steps">';
+  steps.forEach(function(s){ h += '<li>'+inl(s)+'</li>'; });
+  h += '</ol></div>';
+  if (cmd1) h += codebox(b1, cmd1, a1);
+  else if (b1) h += '<p class="cmdlead">'+inl(b1)+'</p>';
+  if (cmd2) h += codebox(b2, cmd2, a2);
+  if (caution) h += '<div class="caution"><p><b>Watch out for.</b> '+inl(caution)+'</p></div>';
+  h += '</article>';
+  return h;
+}
+
+function matches(r){
+  if (state.cat >= 0 && r[2] !== state.cat) return false;
+  if (state.startersOnly && !starterSet[r[1]]) return false;
+  if (state.q){
+    var hay = (r[1]+" "+CATS[r[2]]+" "+r[3]+" "+r[5]+" "+r[6]+" "+r[7].join(" ")).toLowerCase();
+    var terms = state.q.toLowerCase().split(/\s+/);
+    for (var i=0;i<terms.length;i++){ if (hay.indexOf(terms[i]) === -1) return false; }
+  }
+  return true;
+}
+
+function render(){
+  var rows = DATA.filter(matches);
+  if (state.sort === "name") rows = rows.slice().sort(function(a,b){ return a[1].toLowerCase() < b[1].toLowerCase() ? -1 : 1; });
+  if (state.sort === "category") rows = rows.slice().sort(function(a,b){ return (a[2]-b[2]) || (a[0]-b[0]); });
+  grid.innerHTML = rows.map(cardHTML).join("");
+  emptyEl.style.display = rows.length ? "none" : "block";
+  grid.style.display = rows.length ? "grid" : "none";
+}
+
+/* Group filter chips */
+var chipsEl = document.getElementById("chips");
+/* Built once; clicks only flip aria-pressed, so keyboard focus stays put */
+function buildChips(){
+  var h = '<button class="chip" type="button" data-cat="-1">All tools</button>';
+  CATS.forEach(function(c,i){
+    h += '<button class="chip" type="button" data-cat="'+i+'">'+esc(c)+'</button>';
+  });
+  chipsEl.innerHTML = h;
+  syncChips();
+}
+function syncChips(){
+  chipsEl.querySelectorAll("button.chip").forEach(function(b){
+    b.setAttribute("aria-pressed", String(parseInt(b.getAttribute("data-cat"),10) === state.cat));
+  });
+}
+chipsEl.addEventListener("click", function(e){
+  var b = e.target.closest("button.chip"); if (!b) return;
+  state.cat = parseInt(b.getAttribute("data-cat"),10);
+  syncChips(); render();
+});
+
+/* Motion answers the reader: smooth only when they have not asked for less */
+var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function jumpTo(el){
+  if (!el) return;
+  el.scrollIntoView({behavior: reduceMotion ? "auto" : "smooth", block:"start"});
+  var link = el.querySelector("h3 a");
+  if (link) link.focus({preventScroll:true});
+  el.classList.add("flash");
+  setTimeout(function(){ el.classList.remove("flash"); }, 2200);
+}
+
+/* Start Here picks */
+var sg = document.getElementById("starterGrid");
+sg.innerHTML = CATS.map(function(c,i){
+  var links = STARTERS[i].map(function(repo){
+    var entry = DATA.filter(function(r){ return r[1]===repo; })[0];
+    return '<button type="button" data-jump="'+entry[0]+'">'+esc(repo.split("/")[1])+'</button>';
+  }).join("");
+  return '<div class="starter-row"><div class="starter-cat">'+esc(c)+'</div><div class="starter-links">'+links+'</div></div>';
+}).join("");
+sg.addEventListener("click", function(e){
+  var b = e.target.closest("button[data-jump]"); if (!b) return;
+  state.q = ""; document.getElementById("q").value = "";
+  state.cat = -1; state.startersOnly = false;
+  document.getElementById("starterToggle").setAttribute("aria-pressed","false");
+  syncChips(); render();
+  jumpTo(document.getElementById("repo-"+b.getAttribute("data-jump")));
+});
+
+/* Search, sort, toggle */
+document.getElementById("q").addEventListener("input", function(e){ state.q = e.target.value.trim(); render(); });
+document.getElementById("sort").addEventListener("change", function(e){ state.sort = e.target.value; render(); });
+document.getElementById("starterToggle").addEventListener("click", function(e){
+  state.startersOnly = !state.startersOnly;
+  e.currentTarget.setAttribute("aria-pressed", String(state.startersOnly));
+  render();
+});
+document.getElementById("clearBtn").addEventListener("click", function(){
+  state.q=""; state.cat=-1; state.startersOnly=false;
+  document.getElementById("q").value="";
+  document.getElementById("starterToggle").setAttribute("aria-pressed","false");
+  buildChips(); render();
+});
+
+/* Copy buttons (event delegation; covers the tool cards and the beginner guide) */
+document.addEventListener("click", function(e){
+  var b = e.target.closest("button.copybtn"); if (!b) return;
+  var cmd = b.getAttribute("data-cmd");
+  function done(){ b.textContent = "Copied"; b.classList.add("done"); setTimeout(function(){ b.textContent="Copy"; b.classList.remove("done"); }, 1600); }
+  function fallback(){
+    var ta = document.createElement("textarea");
+    ta.value = cmd; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); done(); } catch(err){}
+    document.body.removeChild(ta);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(cmd).then(done, function(){ fallback(); });
+  } else { fallback(); }
+});
+
+buildChips();
+render();
+</script>
+<script>
+/* ===== Muse side: the connector catalogue =====
+   Card fields: [name, group, kind in plain words, what it is,
+   what Muse can do with it, why it would be useful] */
+var MCATS = [
+  "Email, calendar & contacts",
+  "Chat, social & meetings",
+  "Files, docs & notes",
+  "Tasks & projects",
+  "Money, selling & marketing",
+  "Shopping, food & travel",
+  "Building, design & automation",
+  "Health, home & everyday"
+];
+var MDATA = [
+["Gmail",0,"Your Google email",
+"Your Google email inbox: the one most people live in for both home and work.",
+"Muse can search and read your mail, pull out the threads that actually need you, draft replies in your words for your approval, and label, archive, and tidy up the rest.",
+"Everyday: “Summarise the five emails I actually need to answer today.” Founders: wake up to a short brief of client mail, with draft replies ready to approve instead of a wall of unread messages."],
+["Outlook Mail",0,"Your Microsoft email",
+"Your Microsoft email, whether that is a personal Outlook account or a work mailbox on Microsoft 365.",
+"Muse can read and search your mailboxes, draft and send replies once you approve them, and keep long threads organised.",
+"If your job runs on Outlook, Muse can triage it the same way it triages Gmail: what is urgent, what can wait, and what needs a reply before the day ends."],
+["Google Calendar",0,"Your Google calendars",
+"Your Google calendars: work, family, and any shared calendars you keep there.",
+"Muse can show your day and week, find free time, book, move, or cancel events, add guests and meeting links, and warn you about clashes before they happen.",
+"Everyday: “What do I have on Thursday, and where could a dentist visit fit?” Teams: scheduling across people and time zones without the usual chain of emails."],
+["Outlook Calendar",0,"Your Microsoft calendars",
+"Your Microsoft calendars, personal ones and Microsoft 365 work or school calendars.",
+"Muse can check your schedule, find open slots, and create or change events on the calendars you connect.",
+"Useful when home life sits on one calendar and work on another: Muse can check both before you promise anyone a time."],
+["Google Contacts",0,"Your Google address book",
+"Your Google address book: the names, emails, and phone numbers behind everyone you write to.",
+"Muse can look people up, add new contacts, and fix details when someone changes jobs, numbers, or email addresses.",
+"No more digging for a number mid-task. “Add Maria from the workshop, here is her email” and she is saved properly, once."],
+["Outlook Contacts",0,"Your Microsoft address books",
+"The address books in your Microsoft accounts, personal and Microsoft 365 work or school.",
+"Muse can search, add, and update contacts across those address books.",
+"Keeps the people you deal with in Outlook one question away, instead of buried somewhere inside an old email thread."],
+["Calendly",0,"Your booking links",
+"The booking pages people use to schedule time with you, and the meetings those pages create.",
+"Muse can show your event types and who has booked, create one-off booking links, and cancel a meeting when plans change, with your OK.",
+"Consultants and entrepreneurs: send the right booking link in one sentence, and see today's calls without opening another app."],
+["Slack",1,"Your team's work chat",
+"The chat app many teams work in all day: channels, threads, and direct messages.",
+"Muse can read channels and threads, catch you up on what you missed, search old conversations, and post messages as you once you approve them.",
+"Come back from a day off and ask “What did I miss in the launch channel?” instead of scrolling for an hour."],
+["Zoom",1,"Your meetings and recordings",
+"Your Zoom account: meetings, recordings, transcripts, and summaries, plus Team Chat, tasks, and whiteboards.",
+"Muse can find recordings and transcripts from past calls and pull out what was said, decided, and promised.",
+"Ask “What did we agree on the pricing call?” and get the answer from the actual transcript, not from anyone's memory."],
+["Granola",1,"Your meeting notes",
+"Granola keeps the notes, summaries, and transcripts of your past meetings, captured while you talked.",
+"Muse can search your meeting history and pull out decisions, quotes, and action items from any past call.",
+"For anyone who lives in meetings: something a client said six weeks ago is findable in seconds, word for word."],
+["Facebook",1,"Your Facebook account",
+"Your Facebook account, linked through Meta's Accounts Center: profile, posts, groups, events, and saved items.",
+"Muse can read your posts and groups, check events, publish posts you approve, and help search and manage Marketplace listings.",
+"Community builders and local businesses: keep up with your group and page, and sell the spare mower, without living inside the app."],
+["Instagram",1,"Your Instagram account",
+"Your Instagram account: posts, stories, comments, saved items, and audience insights.",
+"Muse can read your posts, comments, and insights, see what is working, and publish posts, stories, and reels that you approve.",
+"Creators and small brands: answer “which post did best this month?” with real numbers, and keep posting without the daily scramble."],
+["Instagram Messages",1,"Your Instagram DMs",
+"Direct messages in your own Instagram accounts: the inbox where customers and collaborators write to you.",
+"Muse can read your DMs and send replies as you, when you ask it to.",
+"Shops and creators who sell through DMs: keep up with customer questions from one place instead of losing them in the app."],
+["Messenger",1,"Your Messenger chats",
+"Your personal Facebook Messenger account: chats, call history, and Marketplace conversations.",
+"Muse can search old conversations, read threads, and send messages as you when you ask.",
+"Find “that address Ana sent me in March” in seconds instead of scrolling through months of chat."],
+["Threads",1,"Your Threads account",
+"Your Threads account: posts, replies, activity, and audience insights.",
+"Muse can read your posts, replies, and feed, check what is trending, look at insights, and publish posts you approve.",
+"If Threads is where your audience is, Muse helps you post consistently and see what actually lands."],
+["Threads Messages",1,"Your Threads DMs",
+"Direct messages from your own Threads account.",
+"Muse can read your Threads DMs and send replies as you when you ask.",
+"Keeps conversations with collaborators and clients moving, without opening the app every hour to check."],
+["Google Drive",2,"Your Google file storage",
+"Your files in Google Drive: documents, spreadsheets, PDFs, photos, and shared folders.",
+"Muse can find files by name or by what is inside them, organise folders, upload and download files, and manage who they are shared with.",
+"“Find the contract we signed in June” becomes one question instead of twenty minutes of opening folders."],
+["Google Docs",2,"Your Google documents",
+"Your Google documents: drafts, notes, proposals, and the notebooks many people keep as Docs.",
+"Muse can read, create, and edit documents, working from your notes or starting from a blank page.",
+"Say “Draft a one-page proposal from these notes” and get a real document you can share, not a chat answer you have to copy over."],
+["Google Sheets",2,"Your spreadsheets",
+"Your Google Sheets: budgets, trackers, lists, and anything else living in rows and columns.",
+"Muse can read and update sheets, add rows, fix formulas, and keep recurring trackers current.",
+"Budgets, lead lists, inventories: Muse fills in and tidies the sheet while you do the thinking that actually needs you."],
+["Google Slides",2,"Your presentations",
+"Your Google Slides presentations: decks for clients, classes, and pitches.",
+"Muse can create and edit slide decks, add content, and polish decks you already have.",
+"Turn an outline into a real first deck in minutes, then spend your own time on the story instead of the boxes."],
+["Google Forms",2,"Your forms and surveys",
+"Google's form builder: sign-up forms, surveys, intake forms, and quizzes, together with their answers.",
+"Muse can build forms, read the responses, and work with the answers people send in.",
+"Event sign-ups, client intake, feedback: ask “What did people say in this week's survey?” and get the summary, not a spreadsheet to squint at."],
+["Dropbox",2,"Your Dropbox files",
+"Your Dropbox account: personal and shared files that follow you across computers.",
+"Muse can search, read, upload, and organise your files and shared folders.",
+"Teams that live in Dropbox get the same find-anything-fast benefit: the right file shows up inside the task you are doing."],
+["Box",2,"Your company files in Box",
+"Box is the file storage many companies use for business documents and shared team files.",
+"Muse can find, read, move, and share files. When an action needs more access, it asks for that extra approval first.",
+"If your company runs on Box, Muse can fetch the right document mid-task instead of you hunting through folders."],
+["Notion",2,"Your notes and workspace",
+"Your Notion workspace: pages, notes, wikis, and databases like project trackers and content calendars.",
+"Muse can search your pages, read and update notes, and work with the databases you keep there.",
+"“What did we write about the onboarding plan?” gets answered from your own notes, not from memory."],
+["Evernote",2,"Your Evernote notes",
+"Your Evernote notebooks: years of saved notes, clippings, tags, and attachments for many long-time users.",
+"Muse can search your notes, notebooks, tags, and attachments and pull what you need into the task at hand.",
+"Long-time note keepers: a decade of saved research becomes reachable by asking, instead of remembering which tag you used in 2019."],
+["Asana",3,"Your team's projects and tasks",
+"Asana is where teams keep projects and tasks: who is doing what, and by when.",
+"Muse can read projects and tasks, check what is due, overdue, or unassigned, and help keep the work moving.",
+"Managers and founders: “What is overdue on the launch project?” answered in seconds, every morning if you want it."],
+["Todoist",3,"Your personal to-do list",
+"Todoist is a popular to-do list app for your own tasks and small projects.",
+"Muse can see your tasks and projects, add new tasks, and help keep your lists tidy and realistic.",
+"Talk your day out loud: “Add these five things to my list” and they are captured before you forget them."],
+["Google Tasks",3,"Your Google to-do lists",
+"The simple to-do lists inside your Google account, sitting next to Gmail and Calendar.",
+"Muse can read and manage your task lists and the individual tasks on them.",
+"For light lists like errands and follow-ups, this keeps them where they already live instead of in yet another app."],
+["Linear",3,"Your software team's tracker",
+"Linear is the issue and project tracker many software teams use to plan and track their work.",
+"Muse can read issues, projects, and work cycles, and report the state of what is in flight.",
+"Builders: “What is still open in this cycle?” without opening another dashboard."],
+["Stripe",4,"Payments for your business",
+"The payment system many businesses use to charge cards and get paid online.",
+"Muse can look up customers, payments, invoices, and subscriptions, check your balance and payouts, and help with refunds and disputes. Anything that moves money goes through you first.",
+"Founders: “How much did we take this week, and which invoices are still unpaid?” answered in one question, from the real numbers."],
+["QuickBooks",4,"Your business books",
+"QuickBooks is the accounting software many small businesses run their books on.",
+"Muse can read your company information through Intuit's service: invoices, expenses, and financial reports.",
+"“What did we spend on software last quarter?” without exporting anything, logging into a dashboard, or bugging your bookkeeper."],
+["Plaid",4,"A window into your bank accounts",
+"Plaid is the secure bridge many finance apps use to see your bank, card, loan, and investment accounts, the ones you choose to link.",
+"Muse can read balances and transactions, spot recurring bills and subscriptions, and review where your spending goes.",
+"Everyday budgeting: “Where did the money go in September?” Entrepreneurs: a clear-eyed picture of cash before a big decision."],
+["Money Forward ME",4,"Your money across accounts",
+"Money Forward ME is a personal finance app that gathers your bank, card, securities, and e-money accounts in one place. It is popular in Japan.",
+"Muse can read the accounts you linked in the app and the transactions across them.",
+"One honest view of your money, instead of opening five separate banking apps to piece it together."],
+["Shopify",4,"Your online store",
+"Shopify is the platform many online stores run on: products, orders, customers, and inventory.",
+"Muse can work with your store's products, collections, inventory, orders, customers, and discounts, and read your sales reports.",
+"Store owners: “Which products sold out this week?” and “Set up a discount for returning customers” in the same conversation."],
+["Printify",4,"Print-on-demand products",
+"Printify prints products like shirts and mugs only when someone orders one, then ships it for you. No stock sitting in a garage.",
+"Muse can manage the products in your connected shops and keep an eye on the orders coming in.",
+"Side-hustle sellers: run a small merch store without holding inventory or packing a single box yourself."],
+["Klaviyo",4,"Email and text marketing",
+"Klaviyo is the email and text-message marketing platform many online stores use to reach their customers.",
+"Muse can work with your campaigns and audience lists through Klaviyo's own service.",
+"Marketers: check how the last campaign actually did and plan the next send, without living inside dashboards."],
+["HighLevel",4,"Customers and marketing for small businesses",
+"HighLevel (also known as GoHighLevel) is a customer and marketing system for small businesses and the agencies that serve them, organised into separate accounts per business.",
+"Muse can work across those accounts: contacts, sales pipelines, and marketing activity.",
+"Agencies: check a client's pipeline and follow-ups across accounts from one assistant, instead of logging into each one."],
+["Meta Business Manager",4,"Facebook and Instagram ads",
+"This is the control room for advertising on Facebook and Instagram: ad accounts, campaigns, audiences, and spend.",
+"Muse can read your campaigns and results, and set up new campaigns in a paused state, so nothing spends a cent until you review and approve it.",
+"Small advertisers: “Which of my ads is actually working?” answered from real numbers instead of gut feeling."],
+["Meta Catalog",5,"Product search across many shops",
+"A giant product catalogue spanning many shops and merchants at once. This one needs no sign-in.",
+"Muse can search products across merchants and compare prices, sizes, and options, and flag which ones can be checked out right away.",
+"“Find running shoes under $120 in my size” comes back with real listings and prices, not just a page of links."],
+["Shop Pay",5,"Shopify's checkout wallet",
+"Shop Pay is the checkout wallet many Shopify stores accept, holding the payment card you saved there.",
+"Muse can pay with it at supported stores, after you approve the purchase.",
+"Fewer checkout forms to fill in, and every purchase still stops for your approval before it goes through."],
+["Link by Stripe",5,"Stripe's checkout wallet",
+"Link is Stripe's wallet for your saved payment methods, used at checkouts that offer it.",
+"After you approve a purchase, Link can fund a one-time virtual card for it, so the shop never receives your real card number.",
+"Safer one-off purchases from shops you may never buy from again."],
+["Shopify UCP",5,"Checkout for catalogue finds",
+"This is the checkout route for products you find through Meta Catalog that support direct buying.",
+"Muse can complete the purchase with the merchant using a connected wallet, and then track or cancel the order.",
+"It takes you from “I found it” to “it is ordered and tracked” in a few steps, inside one conversation."],
+["OpenTable",5,"Restaurant reservations",
+"OpenTable is the restaurant reservation service: real tables, real times, at thousands of restaurants.",
+"Muse can check live availability, book a table, and change or cancel a reservation when plans move.",
+"“A quiet table for four near the theatre, Friday at 7” sorted in one ask, with a real booking at the end of it."],
+["Ticketmaster",5,"Concert, sports, and show tickets",
+"Ticketmaster lists events (concerts, sports, theatre) with the seats actually available and their prices. No account setup needed.",
+"Muse can search events and compare real seats and prices, then hand you the checkout link. Buying itself happens on Ticketmaster's site.",
+"You see the true total for the seats you want before you commit, not after four screens of checkout."],
+["Duffel",5,"Flight search and booking",
+"Duffel searches real airline inventory: actual flights, actual fares, across many airlines.",
+"Muse can search whole trips, compare total price and travel time, and book or cancel flights once you have picked one and approved the fare.",
+"Trip planning with real prices and times, booked in the same conversation instead of in twelve open tabs."],
+["FlightAware",5,"Live flight tracking",
+"FlightAware tracks flights in the air: schedules, live status, positions, and what is happening at airports. There is no account to connect.",
+"Muse can check whether a flight is on time, where it is right now, and whether its airport is having a bad day.",
+"“Is my sister's flight landing on time?” answered with live data, so you leave for the airport at the right moment."],
+["Places",5,"Finding places worth going to",
+"Places finds and describes real-world spots (restaurants, shops, services) with addresses, hours, ratings, reviews, and photos. No account needed.",
+"Muse can find and compare places near a location and give you the details that actually decide it: hours, ratings, and what reviewers say.",
+"“A well-reviewed coffee shop near the venue that opens at 7” with the hours and reviews to back it up."],
+["GitHub",6,"Where software projects live",
+"GitHub is where software projects are stored: the code, the files, the bug reports (issues), and proposed changes (pull requests).",
+"Muse can search your projects, read and work with files, issues, and pull requests.",
+"Builders: “What changed in the app this week?” and “File this bug” without leaving the conversation."],
+["Lovable",6,"Build apps by describing them",
+"Lovable is an AI app builder: you describe the app you want in plain words and it builds it.",
+"Muse can read, create, edit, and publish your Lovable projects.",
+"Non-coders with an idea: check on your app, ask for a change in plain words, and ship it, all in one conversation."],
+["Replit",6,"Write and publish apps online",
+"Replit is an online workshop for software: you write, run, and publish apps from your browser.",
+"Muse can find, create, update, and publish your Replit apps.",
+"Tinkerers and founders: a quick prototype becomes a live link you can send to a real customer today."],
+["Vercel",6,"Where your websites go live",
+"Vercel is the hosting platform that puts many websites and apps online and keeps them there.",
+"Muse can inspect your projects and deployments and make reviewed changes to them.",
+"“Is the site live, and did this morning's update actually go out?” answered instantly, without a dashboard hunt."],
+["Figma",6,"Designs for apps and websites",
+"Figma is the design tool most product teams use to draw apps and websites before they are built.",
+"Muse can read designs and design systems, download the images and assets from them, and make reviewed changes.",
+"Founders working with designers: ask what a screen says, grab the assets your builder needs, and keep the project moving."],
+["Canva",6,"Easy design for everything else",
+"Canva is the friendly design tool for social posts, flyers, decks, and graphics.",
+"Muse can work with your designs, images, folders, and brand kits, resize a design for a different platform, and export the finished file.",
+"“Make the Instagram version of this flyer” from the design you already have, in your own brand colours."],
+["Zapier",6,"The app connector of last resort",
+"Zapier connects thousands of apps to each other with automations you set up once.",
+"Muse can use the actions you have set up in your Zapier account, which can reach apps that have no connector of their own.",
+"The catch-all: if a tool you rely on is not listed on this page, a Zapier setup may still let Muse work with it."],
+["1Password",6,"Your saved logins",
+"1Password is a password manager: it holds your logins so you do not have to remember or retype them.",
+"Muse can use your stored logins to sign you in to websites in Muse's own browser. Your passwords are never typed into a chat.",
+"Booking and buying tasks stop hitting the “what was my password for this site?” wall halfway through."],
+["Tailscale",6,"A private network for your devices",
+"Tailscale links your own computers into a private network, like a members-only road between them.",
+"Muse can join that private network (your tailnet) to reach services you run at home or at the office.",
+"Advanced users: Muse can check on your home server or office machine as if it were sitting in the same room."],
+["Apple Health",7,"Health data from your iPhone",
+"Apple Health gathers the health data on your iPhone: steps, sleep, workouts, and readings that your other apps and watches share with it.",
+"Muse can read your metrics and show trends over time. Deleting anything always asks for your approval first.",
+"“How has my sleep actually been this month?” or finding out whether a new routine is helping, from your real numbers."],
+["Health Connect",7,"Health data from your Android phone",
+"Health Connect is Android's health hub, gathering data from your phone's apps and wearables in one place.",
+"Muse can read your activity, sleep, workouts, and body measurements, and point out trends.",
+"The Android counterpart to Apple Health: your real numbers, summarised in plain words you can act on."],
+["Function Health",7,"Your lab results over time",
+"Function Health is a lab-testing service that tracks biomarkers (the things blood tests measure) over months and years.",
+"Muse can read your lab results and the clinician notes that come with them. This connector only reads; it changes nothing.",
+"“Which of my markers moved since last year?” answered before your next test or your next doctor visit."],
+["HealthEx",7,"Your medical records, gathered",
+"HealthEx pulls your records together from your different healthcare providers into one place.",
+"Muse can read those gathered records when you need them. This connector only reads.",
+"Walk into any appointment able to answer “when was that test, and what did it show?” without phoning three offices."],
+["Withings",7,"Smart scales, watches, and more",
+"Withings makes health devices (smart scales, watches, blood-pressure monitors) that record into your Withings account.",
+"Muse can read your activity, sleep, workouts, weight, and other body measurements from that account.",
+"“Is my weight trending the way I want over the last three months?” from real measurements, not impressions."],
+["Peloton",7,"Your class schedule",
+"Peloton is the workout bike and class platform. This connector covers its class library and your schedule; it cannot see your past workout history.",
+"Muse can search the class catalogue and add or manage classes on your Peloton schedule.",
+"“Find a 30-minute low-impact ride with music I like and put it on tomorrow morning” done in one ask."],
+["Philips Hue",7,"Your smart lights",
+"Philips Hue lights are bulbs and lamps you control from an app instead of a switch.",
+"Muse can control your Hue lights through the Hue setup you already have: on, off, brightness, and scenes.",
+"“Dim the living room for a film,” or a creator setting studio lights before a shoot, just by asking."],
+["Spotify",7,"Your music and podcasts",
+"Spotify is where your music, audiobooks, and podcasts live, along with your library and playlists.",
+"Muse can search the catalogue, manage your library and playlists, and control playback on your devices.",
+"“Build a playlist for a two-hour drive” or “Play the episode I saved yesterday” on the speaker you name."],
+["Tessie",7,"Your Tesla, connected",
+"Tessie is a service that connects to your Tesla and keeps track of it: charge, trips, and state.",
+"Muse can list your vehicles, read their state (like charge level and location), and send supported commands, through your Tessie account.",
+"Tesla owners: “Is the car charged enough for tomorrow's trip?” answered before you are standing in the driveway."]
+];
+
+var mstate = { q:"", cat:-1, sort:"rank" };
+var mgrid = document.getElementById("mgrid");
+var memptyEl = document.getElementById("mempty");
+
+function mcardHTML(r, idx){
+  var h = '<article class="entry">';
+  h += '<h3>'+esc(r[0])+'</h3>';
+  h += '<p class="meta"><span class="grp">'+esc(MCATS[r[1]])+'</span><br />'+esc(r[2])+'</p>';
+  h += '<p><b>What it is.</b> '+inl(r[3])+'</p>';
+  h += '<p><b>What Muse can do with it.</b> '+inl(r[4])+'</p>';
+  h += '<p><b>Why it is useful.</b> '+inl(r[5])+'</p>';
+  h += '</article>';
+  return h;
+}
+
+function mmatches(r){
+  if (mstate.cat >= 0 && r[1] !== mstate.cat) return false;
+  if (mstate.q){
+    var hay = (r[0]+" "+MCATS[r[1]]+" "+r[2]+" "+r[3]+" "+r[4]+" "+r[5]).toLowerCase();
+    var terms = mstate.q.toLowerCase().split(/\s+/);
+    for (var i=0;i<terms.length;i++){ if (hay.indexOf(terms[i]) === -1) return false; }
+  }
+  return true;
+}
+
+function mrender(){
+  var rows = [];
+  MDATA.forEach(function(r, i){ if (mmatches(r)) rows.push([r, i]); });
+  if (mstate.sort === "name") rows = rows.slice().sort(function(a,b){ return a[0][0].toLowerCase() < b[0][0].toLowerCase() ? -1 : 1; });
+  if (mstate.sort === "category") rows = rows.slice().sort(function(a,b){ return (a[0][1]-b[0][1]) || (a[1]-b[1]); });
+  mgrid.innerHTML = rows.map(function(p){ return mcardHTML(p[0], p[1]); }).join("");
+  memptyEl.style.display = rows.length ? "none" : "block";
+  mgrid.style.display = rows.length ? "grid" : "none";
+}
+
+var mchipsEl = document.getElementById("mchips");
+function mbuildChips(){
+  var h = '<button class="chip" type="button" data-mcat="-1">All connectors</button>';
+  MCATS.forEach(function(c,i){
+    h += '<button class="chip" type="button" data-mcat="'+i+'">'+esc(c)+'</button>';
+  });
+  mchipsEl.innerHTML = h;
+  msyncChips();
+}
+function msyncChips(){
+  mchipsEl.querySelectorAll("button.chip").forEach(function(b){
+    b.setAttribute("aria-pressed", String(parseInt(b.getAttribute("data-mcat"),10) === mstate.cat));
+  });
+}
+mchipsEl.addEventListener("click", function(e){
+  var b = e.target.closest("button.chip"); if (!b) return;
+  mstate.cat = parseInt(b.getAttribute("data-mcat"),10);
+  msyncChips(); mrender();
+});
+document.getElementById("mq").addEventListener("input", function(e){ mstate.q = e.target.value.trim(); mrender(); });
+document.getElementById("msort").addEventListener("change", function(e){ mstate.sort = e.target.value; mrender(); });
+document.getElementById("mclearBtn").addEventListener("click", function(){
+  mstate.q=""; mstate.cat=-1;
+  document.getElementById("mq").value="";
+  mbuildChips(); mrender();
+});
+mbuildChips();
+mrender();
+
+/* ===== The Claude / Muse toggle ===== */
+var tabClaude = document.getElementById("tabClaude");
+var tabMuse = document.getElementById("tabMuse");
+var viewClaude = document.getElementById("viewClaude");
+var viewMuse = document.getElementById("viewMuse");
+function setView(muse){
+  document.body.classList.toggle("view-muse", muse);
+  viewClaude.hidden = muse;
+  viewMuse.hidden = !muse;
+  tabClaude.setAttribute("aria-pressed", String(!muse));
+  tabMuse.setAttribute("aria-pressed", String(muse));
+  window.scrollTo(0, 0);
+}
+tabClaude.addEventListener("click", function(){ setView(false); });
+tabMuse.addEventListener("click", function(){ setView(true); });
+</script>
+</body>
+</html>
