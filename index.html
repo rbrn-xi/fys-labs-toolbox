@@ -97,7 +97,7 @@
   .sect-body > p:last-child{margin-bottom:0}
   .sect h3{font-family:"Playfair Display",Georgia,serif;font-weight:700;font-size:25px;line-height:1.15;margin:44px 0 14px}
   .sect > h2,.sect h3{text-wrap:balance}
-  #beginners,#tools,#before,#muse-who,#muse-tools{scroll-margin-top:16px}
+  #beginners,#tools,#before,#muse-who,#muse-tools,#try-claude,#try-muse{scroll-margin-top:16px}
   .sect + .sect{margin-top:80px}
 
   /* Chat versus Claude Code */
@@ -303,6 +303,21 @@
     </div>
   </section>
 
+  <section class="sect" id="try-claude" aria-labelledby="h-tryclaude">
+    <h2 id="h-tryclaude">Try it: two first exercises</h2>
+    <div class="sect-body">
+      <p>Both work in the free Claude chat at claude.ai. Nothing to install. Do the first one, then the second.</p>
+      <ol class="seq">
+        <li><strong>Tidy a messy note.</strong> Open a new chat, paste the line below, then paste a few rough notes of your own after it and press Enter.
+          <div class="addbox"><code>Here are some rough notes. Turn them into a short, friendly email I can send. Keep my meaning, fix the spelling, and keep it under 120 words. My notes:</code><button class="copybtn" type="button" data-cmd="Here are some rough notes. Turn them into a short, friendly email I can send. Keep my meaning, fix the spelling, and keep it under 120 words. My notes:" aria-label="Copy the first Claude exercise">Copy</button></div>
+          <span class="ok"><strong>It worked if</strong> you get a clean email back. Now steer it in plain words: type &ldquo;make it warmer&rdquo; or &ldquo;make it shorter&rdquo; and watch it change. That back-and-forth is most of using Claude well.</span></li>
+        <li><strong>Let Claude interview you.</strong> Start a new chat and paste this. Answer each question in a sentence or two.
+          <div class="addbox"><code>I want to write a one-paragraph description of my business for my website. Before you write anything, ask me five short questions, one at a time, and wait for each answer. Then write the paragraph from my answers.</code><button class="copybtn" type="button" data-cmd="I want to write a one-paragraph description of my business for my website. Before you write anything, ask me five short questions, one at a time, and wait for each answer. Then write the paragraph from my answers." aria-label="Copy the second Claude exercise">Copy</button></div>
+          <span class="ok"><strong>It worked if</strong> Claude asks one question and waits for you before writing. You do not need a perfect request. Asking Claude to ask you questions first usually gets a better result.</span></li>
+      </ol>
+    </div>
+  </section>
+
   <section class="sect" aria-labelledby="h-howto">
     <h2 id="h-howto">How to use this page</h2>
     <div class="sect-body">
@@ -409,6 +424,21 @@
         <li><strong>Sign in with that service.</strong> Muse walks you through it, and you never hand over your password in a chat.</li>
         <li><strong>Ask in plain words</strong>, the way you would ask a capable assistant sitting next to you.</li>
         <li><strong>You stay in charge.</strong> Reading and looking things up is the everyday work. Anything that sends, posts, buys, or changes something goes through you first.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="sect" id="try-muse" aria-labelledby="h-trymuse">
+    <h2 id="h-trymuse">Try it: two first exercises</h2>
+    <div class="sect-body">
+      <p>The first needs no connections at all. The second is your first connection. Do them in order.</p>
+      <ol class="seq">
+        <li><strong>Plan something with Muse on its own.</strong> Paste this into Muse, then change the details to fit your life.
+          <div class="addbox"><code>Help me plan a relaxed Saturday at home with two kids aged 6 and 9, on a small budget. Give me a simple timeline from 9am to 6pm, with one indoor and one outdoor idea for the afternoon.</code><button class="copybtn" type="button" data-cmd="Help me plan a relaxed Saturday at home with two kids aged 6 and 9, on a small budget. Give me a simple timeline from 9am to 6pm, with one indoor and one outdoor idea for the afternoon." aria-label="Copy the first Muse exercise">Copy</button></div>
+          <span class="ok"><strong>It worked if</strong> you get a timeline back. Then ask for a change in plain words, like &ldquo;swap lunch for something we can cook together.&rdquo; Muse is useful before you connect a single app.</span></li>
+        <li><strong>Connect your calendar and ask a reading question.</strong> First connect Google Calendar or Outlook Calendar yourself, using the sign-in steps above. Then paste this.
+          <div class="addbox"><code>Look at my calendar for this week. Which day has the most free time, and is anything double-booked? Do not change anything.</code><button class="copybtn" type="button" data-cmd="Look at my calendar for this week. Which day has the most free time, and is anything double-booked? Do not change anything." aria-label="Copy the second Muse exercise">Copy</button></div>
+          <span class="ok"><strong>It worked if</strong> Muse answers with your real events and nothing on your calendar changes. Reading questions like this are the safest way to start. Muse asks you first before it changes, sends, or books anything.</span></li>
       </ol>
     </div>
   </section>
